@@ -24,11 +24,6 @@ max_growth = matrix(.1, nrow = nspec, ncol = nres)
 half_saturation = matrix(.1, nrow = nspec, ncol = nres)
 byproduct = array(rep(1, nspec * nres^2), dim=c(nspec, nres, nres))
 
-
-dog = matrix(1:4,2,2)
-cat = array(5:12, dim=c(nspec, nres, nres))
-
-
 mult = 
   \(conversion, byproduct){
     ans = sapply(1:nrow(conversion), function(i) conversion[i,] %*% t(byproduct[i,,]))
