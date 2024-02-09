@@ -1,7 +1,10 @@
-library(tidyverse)
+library(ggplot2)
+library(tensor)
 library(deSolve)
-library(parallel)
-library(furrr)
+library(tibble)
+library(tidyr)
+library(dplyr)
+library(reshape2)
 
 plan(multisession(workers = detectCores() - 2))
 theme_set(theme_bw())
@@ -13,22 +16,26 @@ theme_update(
 
 nspec = 2
 nres = 2
-init_spec = rep(10, nspec)
-init_res = rep(5, nres)
 
-immigration = .1
-death = .1
-inflow = .1
-outflow = .1
-assimilation = matrix(.1, nrow = nspec, ncol = nres) 
-conversion = matrix(.1, nrow = nspec, ncol = nres)
-max_growth = matrix(.1, nrow = nspec, ncol = nres)
-half_saturation = matrix(.1, nrow = nspec, ncol = nres)
-byproduct = array(rep(1, nspec * nres^2), dim=c(nspec, nres, nres))
+params = list(
+  nspec = 2,
+  nres = 2,
+  immigration = rep(.1, nspec),
+  death = rep(.1, nspec),
+  inflow = rep(.1, nres),
+  outflow = rep(.05, nres),
+  assimilation = matrix(.8, nrow = nspec, ncol = nres),
+  conversion = matrix(.9, nrow = nspec, ncol = nres),
+  max_growth = matrix(.1, nrow = nspec, ncol = nres),
+  half_saturation = matrix(.1, nrow = nspec, ncol = nres),
+  byproduct = array(rep(.1, nspec * nres^2), dim=c(nspec, nres, nres))
+)
+
+init_state = c(rep(10, params$nspec), rep(5, params$nres))
 
 mult = 
-  \(conversion, byproduct){
-    ans = sapply(1:nrow(conversion), function(i) conversion[i,] %*% t(byproduct[i,,]))
+  \(params){
+    ans = sapply(1:nrow(params$conversion), function(i) params$conversion[i,] %*% t(params$byproduct[i,,]))
     return(t(ans))
   }
 
@@ -38,22 +45,38 @@ index =
   }
 
 consumption = 
-  \(max_growth, half_saturation, res, index){
-    ans = max_growth * (res / (half_saturation + res))
+  \(params, R){
+    ans = params$max_growth * (R / (params$half_saturation + R))
     return(ans)
   }
 
 res_production = 
-  \(consumption, byproduct){
-    ans = matrix(0,nrow(consumption),ncol(consumption))
-    for (i in 1:nrow(consumption)) {
-      ans[i,] = consumption[i,] %*% byproduct[i,,]
+  \(params, R){
+    ans = matrix(0,nrow(consumption(params, R)),ncol(consumption(params, R)))
+    for (i in 1:nrow(consumption(params, R))) {
+      ans[i,] = consumption(params, R)[i,] %*% params$byproduct[i,,]
     }
     return(ans)
   }
 
 growth = 
-  \(conversion, assimilation, byproduct, consumption){
-    ans = rowSums((conversion * assimilation - mult(conversion, byproduct)) * consumption)
+  \(params, R){
+    ans = rowSums((params$conversion * params$assimilation - mult(params)) * consumption(params, R))
     return(ans)
   }
+
+model = 
+  \(t, state, params){
+    N = state[1:params$nspec]
+    R = state[-(1:params$nspec)]
+    dNdt = params$immigration + growth(params, R) * N - params$death * N
+    dRdt = params$inflow - params$outflow * R + colSums(res_production(params, R)) - colSums(consumption(params, R) * N)
+    return(list(c(dNdt,dRdt)))
+  }
+
+sim = ode(y = init_state, times = seq(0, 100, by = 1), func = model, parms = params)
+
+sim.df = as.data.frame(sim)
+abuns.df = melt(sim.df, id.vars='time')
+p <- ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic()
+print(p)
