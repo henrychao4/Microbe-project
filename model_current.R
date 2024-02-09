@@ -13,6 +13,8 @@ theme_update(
 
 nspec = 2
 nres = 2
+init_spec = rep(10, nspec)
+init_res = rep(5, nres)
 
 immigration = .1
 death = .1
@@ -36,17 +38,22 @@ index =
   }
 
 consumption = 
-  \(conversion, assimilation, byproduct){
-    ans = conversion * assimilation - conversion
-    return(1)
-  }
-
-growth = 
-  \(conversion, assimilation, byproduct){
-    return(1)
+  \(max_growth, half_saturation, res, index){
+    ans = max_growth * (res / (half_saturation + res))
+    return(ans)
   }
 
 res_production = 
-  \(conversion, assimilation, byproduct){
-    return(1)
+  \(consumption, byproduct){
+    ans = matrix(0,nrow(consumption),ncol(consumption))
+    for (i in 1:nrow(consumption)) {
+      ans[i,] = consumption[i,] %*% byproduct[i,,]
+    }
+    return(ans)
+  }
+
+growth = 
+  \(conversion, assimilation, byproduct, consumption){
+    ans = rowSums((conversion * assimilation - mult(conversion, byproduct)) * consumption)
+    return(ans)
   }
