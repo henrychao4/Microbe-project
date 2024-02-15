@@ -16,13 +16,13 @@ theme_update(
   aspect.ratio = 1
 )
 
-nspec = 6
+nspec = 5
 
 params = list(
   nspec = nspec,
   inflow = 5,
   outflow = .1,
-  death = .1,
+  death = rep(.1, nspec),
   mu_max = rep(.1, nspec),
   q_min = rep(.1, nspec),
   v_max = rep(.1, nspec),
@@ -49,12 +49,12 @@ model =
     Q = state[2:(params$nspec + 1)]
     N = state[-(1:(params$nspec + 1))]
     dRdt = params$inflow - params$outflow * R - sum(uptake(R, params) * N)
-    dQdt = uptake(R, params) * N - growth(Q, params)
-    dNdt = growth(Q, params) - params$death * N
+    dQdt = Q * (uptake(R, params) - growth(Q, params))
+    dNdt = N * (growth(Q, params) - params$death)
     return(list(c(dRdt,dQdt,dNdt)))
   }
 
-sim = ode(y = init_state, times = seq(0, 100, by = 1), func = model, parms = params)
+sim = ode(y = init_state, times = seq(0, 50, by = 1), func = model, parms = params)
 
 sim.df = as.data.frame(sim)
 abuns.df = melt(sim.df, id.vars='time')
