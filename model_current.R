@@ -1,5 +1,7 @@
 library(ggplot2)
 library(tensor)
+library(future)
+library(parallel)
 library(deSolve)
 library(tibble)
 library(tidyr)
