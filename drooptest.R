@@ -49,7 +49,7 @@ model =
     Q = state[2:(params$nspec + 1)]
     N = state[-(1:(params$nspec + 1))]
     dRdt = params$inflow - params$outflow * R - sum(uptake(R, params) * N)
-    dQdt = N * (uptake(R, params) - growth(Q, params))
+    dQdt = (uptake(R, params) - growth(Q, params))
     dNdt = N * (growth(Q, params) - params$death)
     return(list(c(dRdt,dQdt,dNdt)))
   }
