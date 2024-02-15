@@ -22,14 +22,14 @@ params = list(
   nspec = nspec,
   inflow = 5,
   outflow = .1,
-  death = rep(.1, nspec),
-  mu_max = rep(.1, nspec),
-  q_min = rep(.1, nspec),
-  v_max = rep(.1, nspec),
-  K = rep(.1, nspec)
+  death = c(.2, .1, .1),
+  mu_max = c(.4, .1, .2),
+  q_min = c(1, 1, 1),
+  v_max = c(.4, .4, .3),
+  K = c(.4, .4, .2)
 )
 
-init_state = c(20, rep(10, params$nspec), rep(0, params$nspec))
+init_state = c(20, rep(1, params$nspec), rep(10, params$nspec))
 
 growth = 
   \(Q, params){
@@ -54,9 +54,10 @@ model =
     return(list(c(dRdt,dQdt,dNdt)))
   }
 
-sim = ode(y = init_state, times = seq(0, 50, by = 1), func = model, parms = params)
+sim = ode(y = init_state, times = seq(0, 500, by = 1), func = model, parms = params)
 
 sim.df = as.data.frame(sim)
-abuns.df = melt(sim.df, id.vars='time')
+spec.abuns = sim.df[-(2:5)]
+abuns.df = melt(spec.abuns, id.vars='time')
 p <- ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic()
 print(p)
