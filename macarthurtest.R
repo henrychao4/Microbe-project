@@ -16,9 +16,11 @@ theme_update(
   aspect.ratio = 1
 )
 
+set.seed(1)
+
 nspec = 10
 nclust = nspec / 2
-variation = rnorm(nspec, 1, .0005)
+variation = rnorm(nspec, 1, .1)
 
 params = list(
   nspec = nspec,
