@@ -20,7 +20,7 @@ set.seed(1)
 
 nspec = 10
 nclust = nspec / 2
-variation = rnorm(nspec, 1, .1)
+variation = rnorm(nspec, 1, .5)
 
 params = list(
   nspec = nspec,
