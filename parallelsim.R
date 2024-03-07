@@ -1,12 +1,8 @@
-library(ggplot2)
-library(tensor)
-library(future)
-library(parallel)
+library(tidyverse)
 library(deSolve)
-library(tibble)
-library(tidyr)
-library(dplyr)
-library(reshape2)
+library(parallel)
+library(furrr)
+library(matlib)
 
 plan(multisession(workers = detectCores() - 2))
 theme_set(theme_bw())
@@ -15,31 +11,6 @@ theme_update(
   strip.background = element_rect(fill = 'orange'),
   aspect.ratio = 1
 )
-
-nspec = 5
-nres = 5
-
-resources = seq(0, 1, length = nres)
-traits = seq(0, 1, length = nspec)
-dists = outer(resources, traits, FUN = \(x, y) abs(x - y))
-dists[dists > .5] = 1 - dists[dists > .5]
-C = exp(-(dists / .5) ^ 2)
-
-params = list(
-  nspec = nspec,
-  nres = nres,
-  immigration = rep(.1, nspec),
-  death = rep(.1, nspec),
-  inflow = rep(.1, nres),
-  outflow = rep(.05, nres),
-  assimilation = matrix(.8, nrow = nspec, ncol = nres),
-  conversion = C,
-  max_growth = matrix(.1, nrow = nspec, ncol = nres),
-  half_saturation = matrix(.1, nrow = nspec, ncol = nres),
-  byproduct = array(rep(.1, nspec * nres^2), dim=c(nspec, nres, nres))
-)
-
-init_state = c(rep(10, params$nspec), rep(5, params$nres))
 
 mult = 
   \(params){
@@ -82,10 +53,41 @@ model =
     return(list(c(dNdt,dRdt)))
   }
 
-sim = ode(y = init_state, times = seq(0, 100, by = 1), func = model, parms = params)
+simulation = 
+  \(
 
-sim.df = as.data.frame(sim)
-spec.abuns = sim.df[-((nspec+2):(nspec + nres + 1))]
-abuns.df = melt(spec.abuns, id.vars='time')
-p <- ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic()
-print(p)
+  ){
+    
+    sim = ode(y = init_state, times = seq(0, 100, by = 1), func = model, parms = params)
+    
+    return(num_alpha)
+  }
+
+params = 
+  expand_grid(
+    seed = 0,
+    S = 5,
+    m = .2,
+    g = 1,
+    r = 10,
+    K = 10,
+    niche_width = .3,
+    R = 1:1000,
+    N = c(100),
+    epsilon_R = 0.01,
+    epsilon_N = 0.01
+  )
+
+params = expand_grid(
+  nspec = nspec,
+  nres = nres,
+  immigration = rep(.1, nspec),
+  death = rep(.1, nspec),
+  inflow = rep(.1, nres),
+  outflow = rep(.05, nres),
+  assimilation = matrix(.8, nrow = nspec, ncol = nres),
+  conversion = matrix(.9, nrow = nspec, ncol = nres),
+  max_growth = matrix(.1, nrow = nspec, ncol = nres),
+  half_saturation = matrix(.1, nrow = nspec, ncol = nres),
+  byproduct = array(rep(.1, nspec * nres^2), dim=c(nspec, nres, nres))
+)
