@@ -39,13 +39,13 @@ simulation =
     
     #perturb the invader slightly off the plane
     
-    pert_inv_c1 = runif(1, min = 0, max = .005)
-    pert_inv_c2 = runif(1, min = 0, max = .005)
-    pert_inv_d = runif(1, min = 0, max = .005)
+    # pert_inv_c1 = runif(1, min = 0, max = .005)
+    # pert_inv_c2 = runif(1, min = 0, max = .005)
+    # pert_inv_d = runif(1, min = 0, max = .005)
     
-    # pert_inv_c1 = .001
-    # pert_inv_c2 = .001
-    # pert_inv_d = .001
+    pert_inv_c1 = .001
+    pert_inv_c2 = .001
+    pert_inv_d = .001
     
     inv_c1 = inv_c1 - pert_inv_c1
     inv_c2 = inv_c2 - pert_inv_c2
