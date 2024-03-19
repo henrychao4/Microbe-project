@@ -28,20 +28,24 @@ simulation =
     inv_c2
   ){
     
+    #resource and resident parameters
     r = c(1, 1)
     K = c(10, 10)
     res_C = matrix(c(.2, .1, .1, .2), nrow = 2, ncol = 2)
     res_d = c(.2, .2)
     
+    #chosing d such that the invader lies on the neutral plane
     inv_d = inv_c1 * (res_C[2,2] * res_d[1] - res_C[1,2] * res_d[2]) / (res_C[1,1] * res_C[2,2] - res_C[1,2] * res_C[2,1]) + inv_c2 * (res_C[1,1] * res_d[2] - res_C[2,1] * res_d[1]) / (res_C[1,1] * res_C[2,2] - res_C[1,2] * res_C[2,1])
     
-    pert_inv_c1 = runif(1, min = 0, max = .01)
-    pert_inv_c2 = runif(1, min = 0, max = .01)
-    pert_inv_d = runif(1, min = 0, max = .01)
+    #perturb the invader slightly off the plane
     
-    # pert_inv_c1 = .01
-    # pert_inv_c2 = .01
-    # pert_inv_d = .01
+    pert_inv_c1 = runif(1, min = 0, max = .005)
+    pert_inv_c2 = runif(1, min = 0, max = .005)
+    pert_inv_d = runif(1, min = 0, max = .005)
+    
+    # pert_inv_c1 = .001
+    # pert_inv_c2 = .001
+    # pert_inv_d = .001
     
     inv_c1 = inv_c1 - pert_inv_c1
     inv_c2 = inv_c2 - pert_inv_c2
@@ -51,24 +55,24 @@ simulation =
     C = rbind(res_C, inv_C)
     d = c(res_d, inv_d)
     
-    init_residents = 0
-    init_resources = 0
-    init_invader = 1
-    
+    #run resident community to equilibrium first
     init_state = c(rep(10, length(r)), rep(10, length(res_d)))
-    initialize = ode(y = init_state, times = seq(0, 3000, by = .1), func = model, parms = list(r = r, K = K, C = res_C, d = res_d))
+    initialize = ode(y = init_state, times = seq(0, 1000, by = .1), func = model, parms = list(r = r, K = K, C = res_C, d = res_d))
     resident_eql = tail(initialize, 1)[-1]
-    invader_init = .1
     
+    #now add the invader and restart the system
+    invader_init = .1
     new_init_state = c(resident_eql, invader_init)
     
-    sim = ode(y = new_init_state, times = seq(0, 3000, by = .1), func = model, parms = list(r = r, K = K, C = C, d = d)) |>
+    sim = ode(y = new_init_state, times = seq(0, 3000, by = .01), func = model, parms = list(r = r, K = K, C = C, d = d)) |>
       as.data.frame()
     
     colnames(sim) = c('time', 'R1', 'R2', 'N1', 'N2', 'N3')
     
+    #calculate extinction time of the invader
     t_extinct = min(filter(sim, N3 < .01)$time)
     
+    #calculate precise distance of invader traits to neutral plane
     A_plane = (C[2,2] * d[1] - C[1,2] * d[2]) / (C[1,1] * C[2,2] - C[1,2] * C[2,1])
     B_plane = (C[1,1] * d[2] - C[2,1] * d[1]) / (C[1,1] * C[2,2] - C[1,2] * C[2,1])
     C_plane = -1
@@ -112,8 +116,8 @@ plot_c32 = seq(.1, .3, by = .01)
 plot_d = outer(plot_c31, plot_c32, neutral_plane)
 
 p2 = plot_ly(data = results, x = ~c_31, y = ~c_32, z = ~d_3, type = "scatter3d", mode = "markers", color = ~Exclusion_Time) %>%
-  add_trace(x = .2, y = .1, z = .2, inherit = FALSE) %>%
-  add_trace(x = .1, y = .2, z = .2, color = 'resident', inherit = FALSE) %>%
-  add_surface(x = plot_c31, y = plot_c32, z = plot_d, color = 'resident', inherit = FALSE)
+  add_trace(x = .2, y = .1, z = .2, inherit = FALSE, color = 'resident') %>%
+  add_trace(x = .1, y = .2, z = .2, inherit = FALSE, color = 'resident') %>%
+  add_surface(x = plot_c31, y = plot_c32, z = plot_d, inherit = FALSE)
 
 print(p2)
