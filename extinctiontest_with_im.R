@@ -58,15 +58,15 @@ resident_eql = tail(initialize, 1)[-1]
 invader_init = 1
 new_init_state = c(resident_eql, invader_init)
 
-sim = ode(y = new_init_state, times = seq(0, 1000, by = .1), func = model_inv, parms = params) |>
+sim = ode(y = new_init_state, times = seq(0, 5000, by = .1), func = model_inv, parms = params) |>
   as.data.frame()
 
-colnames(sim) = c('time', 'R1', 'R2', 'Nres1', 'Nres2', paste0('N', 1:ninvader))
+colnames(sim) = c('time', 'R1', 'R2', 'Resident 1', 'Resident 2', 'Invader')
 
 #t_extinct = min(filter(sim, N1 < .01)$time)
 
 sim.df = as.data.frame(sim)
 spec.abuns = sim.df[-(2:3)]
 abuns.df = melt(spec.abuns, id.vars='time')
-p <- ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic()
+p <- ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic() + ggtitle('With Immigration')
 print(p)
