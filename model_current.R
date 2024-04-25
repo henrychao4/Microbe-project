@@ -16,7 +16,7 @@ theme_update(
   aspect.ratio = 1
 )
 
-set.seed(4)
+set.seed(1)
 
 nspec = 10
 nres = 10
