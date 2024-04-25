@@ -113,7 +113,7 @@ num_coexist = length(eql_abuns[eql_abuns > .1])
 df = c(eql_abuns, num_coexist) |> t() |> as_tibble()
 colnames(df) = c(paste0('N', seq(nspec)), 'num_coexist')
 
-hamming_dist = \(x,y) {
+hamming_dist = \(x, y) {
   ans = sum(x != y)
   return(ans)
 }
