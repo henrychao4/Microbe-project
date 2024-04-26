@@ -64,7 +64,8 @@ gamma =
     for (i in 1:params$nspec) {
       ans[i] = params$epsilon * sum(U(params, R)[i,])
     }
-    return(ans)
+    ans2 = params$epsilon * rowSums(U(params, R))
+    return(c(ans, ans2))
   }
 
 find_num_alpha =
@@ -99,7 +100,7 @@ model =
     return(list(c(dNdt, dRdt, dWdt)))
   }
 
-sim = ode(y = init_state, times = seq(0, 5000, by = 1), func = model, parms = params)
+sim = ode(y = init_state, times = seq(0, 5, by = 1), func = model, parms = params)
 
 sim.df = as.data.frame(sim)
 spec.abuns = sim.df[-((nspec+2):(nspec + nres + 2))]
@@ -117,12 +118,3 @@ hamming_dist = \(x, y) {
   ans = sum(x != y)
   return(ans)
 }
-
-dists = matrix(0, nrow = nspec, ncol = nspec)
-for (i in 1:nspec) {
-  for (j in 1:nspec) {
-    dists[i,j] = hamming_dist(params$I[i,], params$I[j,])
-  }
-}
-
-num_alpha = find_num_alpha(eql, eql_abuns, model, params)
