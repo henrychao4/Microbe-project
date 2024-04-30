@@ -103,7 +103,7 @@ modularity = \(I) {
   
 }
 
-sim = ode(y = init_state, times = seq(0, 200000, by = 1), func = model, parms = params)
+sim = ode(y = init_state, times = seq(0, 20000, by = 1), func = model, parms = params)
 
 sim.df = as.data.frame(sim)
 spec.abuns = sim.df[-((nspec+2):(nspec + nres + 2))]
