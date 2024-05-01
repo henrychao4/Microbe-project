@@ -80,7 +80,7 @@ simulation =
     p = array(rep(0, nspec * nres^2), dim=c(nspec, nres, nres))
     
     init_state = c(rep(1, nspec), rep(1, nres), 0)
-    sim = ode(y = init_state, times = seq(0, 50000, by = 1), func = model, parms = list(nspec = nspec, nres = nres, alpha = alpha, mu = mu, rho = rho, delta = delta, epsilon = epsilon, beta = beta, h = h, I = I, p = p))
+    sim = ode(y = init_state, times = seq(0, 30000, by = 1), func = model, parms = list(nspec = nspec, nres = nres, alpha = alpha, mu = mu, rho = rho, delta = delta, epsilon = epsilon, beta = beta, h = h, I = I, p = p))
     
     eql = tail(sim, 1)[-1]
     eql_abuns = eql[0:nspec]
@@ -120,7 +120,7 @@ simulation =
 
 params = 
   expand_grid(
-    numsim = 1:200,
+    numsim = 1:300,
     nspec = nspec,
     nres = nres
   )
@@ -143,8 +143,6 @@ for (i in 1:nspec) {
   mod_vec[i] = mean(result[result$num_coexist == i,]$modularity)
   nest_vec[i] = mean(result[result$num_coexist == i,]$nestedness)
 }
-
-
 
 plot(1:nspec, ham_vec, xlab = 'Number of Coexisting Species', ylab = 'Average Pairwise Hamming Distance')
 plot(1:nspec, mod_vec, xlab = 'Number of Coexisting Species', ylab = 'Average Modularity')

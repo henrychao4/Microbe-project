@@ -16,10 +16,10 @@ theme_update(
   aspect.ratio = 1
 )
 
-set.seed(1)
+set.seed(2)
 
-nspec = 20
-nres = 20
+nspec = 10
+nres = 10
 
 makeI = \(nspec, nres) {
   I = matrix(0, nrow = nspec, ncol = nres)
@@ -103,7 +103,7 @@ modularity = \(I) {
   
 }
 
-sim = ode(y = init_state, times = seq(0, 20000, by = 1), func = model, parms = params)
+sim = ode(y = init_state, times = seq(0, 30000, by = 1), func = model, parms = params)
 
 sim.df = as.data.frame(sim)
 spec.abuns = sim.df[-((nspec+2):(nspec + nres + 2))]
