@@ -57,7 +57,7 @@ model =
   }
 
 hamming_dist = \(x,y) {
-  ans = sum(x != y) / length(x)
+  ans = sum(x != y)
   return(ans)
 }
 
@@ -90,6 +90,15 @@ simulation =
     df = as_tibble(df)
     df$I = list(I)
     
+    probs = eql_abuns / sum(eql_abuns)
+    df$diversity = -sum(probs * log(probs))
+    weighted_dists = matrix(0, nrow = nspec, ncol = nspec)
+    for (i in 1:nspec) {
+      for (j in 1:nspec) {
+        weighted_dists[i,j] = hamming_dist(I[i,], I[j,]) * probs[i] * probs[j]
+      }
+    }
+    
     overall_dists = matrix(0, nrow = nspec, ncol = nspec)
     
     for (i in 1:nspec) {
@@ -98,7 +107,7 @@ simulation =
       }
     }
     
-    coexist_traits = I[eql_abuns > .1,eql_abuns > .1]
+    coexist_traits = I[eql_abuns > .1, ]
     coex_dists = coex_dists = matrix(0, nrow = nrow(coexist_traits), ncol = nrow(coexist_traits))
     
     for (i in 1:nrow(coexist_traits)) {
@@ -107,8 +116,9 @@ simulation =
       }
     }
     
-    df$avg_ham = mean(overall_dists)
-    df$avg_coex_ham = mean(coex_dists)
+    df$avg_dist = mean(overall_dists)
+    df$avg_coex_dist = mean(coex_dists)
+    df$avg_weighted_dist = mean(weighted_dists)
     df$modularity = DIRT_LPA_wb_plus(I)$modularity
     df$nestedness = nested(I)
 
@@ -134,18 +144,19 @@ result =
 
 hist(result$num_coexist)
 
-ham_vec = rep(0, nspec)
+dist_vec = rep(0, nspec)
 mod_vec = rep(0, nspec)
 nest_vec = rep(0, nspec)
 
 for (i in 1:nspec) {
-  ham_vec[i] = mean(result[result$num_coexist == i,]$avg_ham)
+  dist_vec[i] = mean(result[result$num_coexist == i,]$avg_dist)
   mod_vec[i] = mean(result[result$num_coexist == i,]$modularity)
   nest_vec[i] = mean(result[result$num_coexist == i,]$nestedness)
 }
 
-plot(1:nspec, ham_vec, xlab = 'Number of Coexisting Species', ylab = 'Average Pairwise Hamming Distance')
+plot(1:nspec, dist_vec, xlab = 'Number of Coexisting Species', ylab = 'Average Pairwise Hamming Distance')
 plot(1:nspec, mod_vec, xlab = 'Number of Coexisting Species', ylab = 'Average Modularity')
 plot(1:nspec, nest_vec, xlab = 'Number of Coexisting Species', ylab = 'Average Nestedness')
-plot(result$avg_ham, result$avg_coex_ham, xlab = 'Average Initial Pairwise Hamming Distance', ylab = 'Average Coexisting Pairwise Hamming Distance')
+plot(result$avg_dist, result$avg_weighted_dist, xlab = 'Average Initial Pairwise Hamming Distance', ylab = 'Average Pairwise Weighted Hamming Distance')
+plot(result$avg_dist, result$avg_coex_dist, xlab = 'Average Initial Pairwise Hamming Distance', ylab = 'Average Coexisting Pairwise Hamming Distance')
 abline(a = 0, b = 1)
