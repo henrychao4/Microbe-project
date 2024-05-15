@@ -18,8 +18,8 @@ theme_update(
 
 set.seed(2)
 
-nspec = 10
-nres = 10
+nspec = 20
+nres = 20
 
 makeI = \(nspec, nres) {
   I = matrix(0, nrow = nspec, ncol = nres)
@@ -33,7 +33,7 @@ makeI = \(nspec, nres) {
 params = list(
   nspec = nspec,
   nres = nres,
-  alpha = rep(0, nspec),
+  alpha = rep(0.01, nspec),
   mu = rep(.05, nspec),
   rho = rep(.3, nres),
   delta = rep(.05, nres),
@@ -118,7 +118,7 @@ df = c(eql_abuns, num_coexist) |> t() |> as_tibble()
 colnames(df) = c(paste0('N', seq(nspec)), 'num_coexist')
 
 hamming_dist = \(x, y) {
-  ans = sum(x != y) / length(x)
+  ans = sum(x != y)
   return(ans)
 }
 
@@ -130,7 +130,7 @@ for (i in 1:nspec) {
 }
 
 num_alpha = find_num_alpha(eql, eql_abuns, model, params)
-coexist_traits = params$I[eql_abuns > .1, eql_abuns > .1]
+coexist_traits = params$I[eql_abuns > .1,]
 
 overall_dists = matrix(0, nrow = nspec, ncol = nspec)
 coex_dists = matrix(0, nrow = nrow(coexist_traits), ncol = nrow(coexist_traits))
@@ -149,6 +149,3 @@ for (i in 1:nrow(coexist_traits)) {
 
 overall_avg_ham_dist = mean(dists)
 coexist_avg_ham_dist = mean(coex_dists)
-
-print(overall_avg_ham_dist)
-print(coexist_avg_ham_dist)
