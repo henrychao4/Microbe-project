@@ -95,5 +95,3 @@ lines(tbl[,2], type = 'b', col = 'blue')
 
 plot(gap, type = 'b', col = 'red')
 
-
-

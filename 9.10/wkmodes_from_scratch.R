@@ -1,4 +1,4 @@
-set.seed(2)
+set.seed(1)
 
 nclust = 5 #number of clusters
 n = 6 #number of species per cluster
@@ -47,10 +47,33 @@ weighted_mode = function(x, weights) {
   unique_vals[which.max(weighted_freq)]
 }
 
+init_centers <- function(data, weights, k) {
+  n <- nrow(data)
+  centers <- matrix(nrow = k, ncol = ncol(data))
+  first_center_idx <- sample(1:n, 1)
+  centers[1, ] <- data[first_center_idx, ]
+  
+  for (i in 2:k) {
+    min_diss <- apply(data, 1, function(obs) {
+      min(sapply(1:(i-1), function(c) {
+        weighted_hamming_dist(obs, centers[c, ], weights)
+      }))
+    })
+    
+    prob <- min_diss^2 / sum(min_diss^2)
+    
+    next_center_idx <- sample(1:n, 1, prob = prob)
+    centers[i, ] <- data[next_center_idx, ]
+  }
+  
+  return(centers)
+}
+
 set.seed(1)
 
 weighted_k_modes <- function(data, weights, k, max_iter) {
-  centers = data[sample(1:nrow(data), k), ]
+  centers = init_centers(data, weights, k)
+  #centers = data[sample(1:nrow(data), k), ]
   clusters = rep(0, nrow(data))
   convergence = 0
   iter = 1
@@ -113,3 +136,5 @@ for (i in 1:length(k_vec)) {
 }
 
 plot(k_vec, error, type = 'b')
+
+#now need to work on generating the null data for gap stat
