@@ -18,7 +18,7 @@ makeI = \(nclust, nspec, nres) {
   for (i in 1:nspec) {
     I[i,] = clust_traits[ceiling(i/n),]
     for (j in 1:nres) {
-      flip = rbernoulli(1, 0.1)
+      flip = rbernoulli(1, .1)
       if (flip == 1) {
         if (I[i,j] == 0) {
           I[i,j] = 1
@@ -38,7 +38,7 @@ weights = c(rep(.01, nspec/5), rep(.9, 4 * nspec / 5))
 #weights = rep(1, nspec)
 
 weighted_hamming_dist = function(vec1, vec2, weight) {
-  distance <- sum(vec1 != vec2) * weight
+  distance = sum(vec1 != vec2) * weight
   return(distance)
 }
 
@@ -53,18 +53,18 @@ weighted_mode = function(x, weights) {
 
 init_centers = function(data, weights, k) {
   n = nrow(data)
-  centers = matrix(nrow = k, ncol = ncol(data))
+  centers = matrix(0, nrow = k, ncol = ncol(data))
   first_center_idx = sample(1:n, 1)
   centers[1, ] = data[first_center_idx, ]
   
   for (i in 2:k) {
-    min_diss = apply(data, 1, function(obs) {
+    min_dist = apply(data, 1, function(pt) {
       min(sapply(1:(i-1), function(c) {
-        weighted_hamming_dist(obs, centers[c, ], weights)
+        weighted_hamming_dist(pt, centers[c, ], weights)
       }))
     })
     
-    prob <- min_diss^2 / sum(min_diss^2)
+    prob = min_dist^2
     
     next_center_idx = sample(1:n, 1, prob = prob)
     centers[i, ] = data[next_center_idx, ]
@@ -167,7 +167,6 @@ gap = null_clust_dispersion_avg - clust_dispersion
 
 plot(k_vec, clust_dispersion, type = 'b', col = 'blue')
 lines(k_vec, null_clust_dispersion_avg, type = 'b', col = 'red')
-legend(5,5.5,c("Actual log W","Bootstrapped log W"), lwd=c(5,2), col=c("blue","red"), y.intersp=1.5)
 
 plot(k_vec, gap, type = 'b')
 
