@@ -1,3 +1,5 @@
+library(purrr)
+
 set.seed(1)
 
 nclust = 5 #number of clusters
@@ -31,7 +33,8 @@ makeI = \(nclust, nspec, nres) {
 }
 
 data = makeI(nclust, nspec, nres)
-weights = runif(nspec)
+#weights = runif(nspec)
+weights = c(rep(.01, nspec/5), rep(.9, 4 * nspec / 5))
 #weights = rep(1, nspec)
 
 weighted_hamming_dist = function(vec1, vec2, weight) {
@@ -45,16 +48,17 @@ weighted_mode = function(x, weights) {
     sum(weights[x == val])
   })
   unique_vals[which.max(weighted_freq)]
+  #unique_vals[which.max(rank(weighted_freq, ties.method = "random"))]
 }
 
-init_centers <- function(data, weights, k) {
-  n <- nrow(data)
-  centers <- matrix(nrow = k, ncol = ncol(data))
-  first_center_idx <- sample(1:n, 1)
-  centers[1, ] <- data[first_center_idx, ]
+init_centers = function(data, weights, k) {
+  n = nrow(data)
+  centers = matrix(nrow = k, ncol = ncol(data))
+  first_center_idx = sample(1:n, 1)
+  centers[1, ] = data[first_center_idx, ]
   
   for (i in 2:k) {
-    min_diss <- apply(data, 1, function(obs) {
+    min_diss = apply(data, 1, function(obs) {
       min(sapply(1:(i-1), function(c) {
         weighted_hamming_dist(obs, centers[c, ], weights)
       }))
@@ -62,16 +66,14 @@ init_centers <- function(data, weights, k) {
     
     prob <- min_diss^2 / sum(min_diss^2)
     
-    next_center_idx <- sample(1:n, 1, prob = prob)
-    centers[i, ] <- data[next_center_idx, ]
+    next_center_idx = sample(1:n, 1, prob = prob)
+    centers[i, ] = data[next_center_idx, ]
   }
   
   return(centers)
 }
 
-set.seed(1)
-
-weighted_k_modes <- function(data, weights, k, max_iter) {
+weighted_k_modes = function(data, weights, k, max_iter) {
   centers = init_centers(data, weights, k)
   #centers = data[sample(1:nrow(data), k), ]
   clusters = rep(0, nrow(data))
@@ -121,20 +123,52 @@ calculate_within_cluster_error = function(data, clusters, centers, weights) {
   return(total_error)
 }
 
-kmode = weighted_k_modes(data, weights, k = 5, max_iter = 100)
-calculate_within_cluster_error(data, kmode$clusters, kmode$centers, weights)
+get_null_data = function(data) {
+  n = nrow(data)
+  m = ncol(data)
+  null_data = matrix(0, nrow = n, ncol = m)
+  
+  for (j in 1:m) {
+    null_data[,j] = sample(data[,j], n, replace = T)
+  }
+  
+  return(null_data)
+}
 
 k_vec = 2:8
-error = rep(0, length(k_vec))
+clust_dispersion = rep(0, length(k_vec))
 for (i in 1:length(k_vec)) {
   errs = rep(0, 10)
   for (j in 1:10) {
     kmode = weighted_k_modes(data, weights, k_vec[i], max_iter = 100)
     errs[j] = calculate_within_cluster_error(data, kmode$clusters, kmode$centers, weights)
   }
-  error[i] = min(errs)
+  clust_dispersion[i] = log(min(errs))
 }
 
-plot(k_vec, error, type = 'b')
+n_bootstrap = 10
+null_clust_dispersion = matrix(0, nrow = n_bootstrap, ncol = length(k_vec))
 
-#now need to work on generating the null data for gap stat
+for (i in 1:n_bootstrap) {
+  null_data = get_null_data(data)
+  for (j in 1:length(k_vec)) {
+    errs = rep(0, 10)
+    for (k in 1:10) {
+      kmode = weighted_k_modes(null_data, weights, k_vec[j], max_iter = 100)
+      errs[k] = calculate_within_cluster_error(null_data, kmode$clusters, kmode$centers, weights)
+    }
+    null_clust_dispersion[i,j] = log(min(errs))
+  }
+}
+
+null_clust_dispersion_avg = colSums(null_clust_dispersion) / n_bootstrap
+
+gap = null_clust_dispersion_avg - clust_dispersion
+
+plot(k_vec, clust_dispersion, type = 'b', col = 'blue')
+lines(k_vec, null_clust_dispersion_avg, type = 'b', col = 'red')
+legend(5,5.5,c("Actual log W","Bootstrapped log W"), lwd=c(5,2), col=c("blue","red"), y.intersp=1.5)
+
+plot(k_vec, gap, type = 'b')
+
+#now have to implement to the actual model
