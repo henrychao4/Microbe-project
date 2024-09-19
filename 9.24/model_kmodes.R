@@ -177,7 +177,7 @@ plot(1:k_max, post_sim_gap_stat$Tab[,3], type = 'b', xlab = 'k', ylab = 'gap', m
 
 max_gap = max(post_sim_gap_stat$Tab[,3])
 
-best_wKModes(I, weights = eql_abuns, modes = 8, nruns = 10)
+best_wKModes(I, weights = eql_abuns, modes = 5, nruns = 10)
 
 dist(I, method = 'binary')
 
