@@ -171,9 +171,7 @@ find_optimal_clusters = \(data, weights, max_iter, n_bootstrap, k_max, nruns) {
   
   gap = null_clust_dispersion_avg - clust_dispersion
   
-  plot(k_vec, gap, type = 'b')
-  
-  return(which.max(gap))
+  return(list(k = k_vec, gap = gap))
 }
 
 set.seed(8)
@@ -252,8 +250,12 @@ num_coexist = length(eql_abuns[eql_abuns > .1])
 df = c(eql_abuns, num_coexist) |> t() |> as_tibble()
 colnames(df) = c(paste0('N', seq(nspec)), 'num_coexist')
 
-init_abun_gap = find_optimal_clusters(data = I, weights = rep(1, nspec), max_iter = 100, n_bootstrap = 10, k_max = 5, nruns = 10)
+init_abun = find_optimal_clusters(data = I, weights = rep(1, nspec), max_iter = 100, n_bootstrap = 10, k_max = 5, nruns = 10)
 
-eql_abun_gap = find_optimal_clusters(data = I, weights = eql_abuns + .01, max_iter = 100, n_bootstrap = 10, k_max = 5, nruns = 10)
+plot(init_abun$k, init_abun$gap, type = 'b', main = 'Initial Abundances')
+
+eql_abun = find_optimal_clusters(data = I, weights = eql_abuns + .01, max_iter = 100, n_bootstrap = 10, k_max = 5, nruns = 10)
+
+plot(eql_abun$k, eql_abun$gap, type = 'b', main = 'Equilibrium Abundances')
 
 #this is actually demonstrating clustering
