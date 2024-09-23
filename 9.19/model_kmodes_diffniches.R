@@ -19,9 +19,9 @@ theme_update(
   aspect.ratio = 1
 )
 
-set.seed(1)
+set.seed(8)
 
-nspec = 30
+nspec = 10
 nres = 10
 
 makeI = \(nspec, nres) {
@@ -38,9 +38,9 @@ I = makeI(nspec, nres)
 params = list(
   nspec = nspec,
   nres = nres,
-  alpha = rep(0.01, nspec),
+  alpha = rep(0, nspec),
   mu = rep(.05, nspec),
-  rho = rnorm(nres, mean = .6, sd = .2),
+  rho = c(rep(0, nres-2), rep(.6, 2)),
   delta = rep(.05, nres),
   epsilon = .9,
   beta = 1,
@@ -120,7 +120,7 @@ num_coexist = length(eql_abuns[eql_abuns > .1])
 df = c(eql_abuns, num_coexist) |> t() |> as_tibble()
 colnames(df) = c(paste0('N', seq(nspec)), 'num_coexist')
 
-k_max = 10
+k_max = 5
 pre_sim_gap_stat = clusGap(I, FUN = best_wKModes, K.max = k_max, B = 10, weights = rep(1, nspec), nruns = 10, verbose = F)
 post_sim_gap_stat = clusGap(I, FUN = best_wKModes, K.max = k_max, B = 10, weights = eql_abuns, nruns = 10, verbose = F)
 print(pre_sim_gap_stat)
