@@ -44,7 +44,7 @@ best_kmeans = \(data, k, nruns) {
 }
 
 nspec = 20
-nres = 3
+nres = 4
 
 C = matrix(rnorm(n = nspec * nres, mean = .5, sd = .1), nrow = nspec, ncol = nres)
 
@@ -96,7 +96,7 @@ for (i in 1:nspec) {
 dupe_data = dupe_data[-1,]
 
 init_clusgap = clusGap(C, FUNcluster = kmeans, K.max = 19, B = 20)
-eql_clusgap = clusGap(dupe_data, FUNcluster = best_kmeans, K.max = 19, B = 20, nruns = 10)
+eql_clusgap = clusGap(dupe_data, FUNcluster = kmeans, K.max = 19, B = 20)
 
 plot(1:19, init_clusgap$Tab[,3], type = 'b')
 plot(1:19, eql_clusgap$Tab[,3], type = 'b')
