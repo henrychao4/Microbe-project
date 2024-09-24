@@ -184,7 +184,7 @@ KmeansGap=function(
 	maxnullquant90=quantile(maxnullgap,.9)				## 90% quantile of the max null gaps --- scalar
 	
 	if(plot){		
-		plot(0,t='n',xlim=c(min(kvec),max(kvec)),ylim=c(0,max(Gapk,maxnullquant95)),las=1,xlab='No. clusters',ylab='Gap')
+		plot(0,t='n',xlim=c(min(kvec),max(kvec)),ylim=c(min(Gapk),max(Gapk,maxnullquant95)),las=1,xlab='No. clusters',ylab='Gap')
 		if(bands) polygon(x=c(kvec,rev(kvec)),y=c(mngap,rev(nullquant95)),col='grey90',border=NA)
 		lines(kvec,rep(maxnullquant95,length(kvec)),col=2)
 		if(plotquant90){ 
