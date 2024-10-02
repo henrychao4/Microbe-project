@@ -121,8 +121,8 @@ k_max = 7
 init_clusgap = clusGap(init_data, FUNcluster = kmodes, K.max = k_max, B = 10, verbose = F)
 eql_clusgap = clusGap(eql_data, FUNcluster = kmodes, K.max = k_max, B = 10)
 
-plot(1:k_max, init_clusgap$Tab[,3], type = 'b')
-plot(1:k_max, eql_clusgap$Tab[,3], type = 'b')
+plot(1:k_max, init_clusgap$Tab[,3], type = 'b', xlab = 'k', ylab = 'Gap', main = 'Initial Abundances of 10 each')
+plot(1:k_max, eql_clusgap$Tab[,3], type = 'b', xlab = 'k', ylab = 'Gap', main = 'Equilibrium Abundances')
 
 imax_gaps = rep(0, 5)
 emax_gaps = rep(0, 5)
