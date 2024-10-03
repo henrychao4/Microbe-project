@@ -136,3 +136,9 @@ kmg_data$N = round(eql_abuns)
 kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = 19)
 
 plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b')
+
+kmg_data = as.data.frame(null_C)
+kmg_data$N = round(eql_abuns)
+kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = 19)
+
+plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b')
