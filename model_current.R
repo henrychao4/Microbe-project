@@ -7,6 +7,7 @@ library(tibble)
 library(tidyr)
 library(dplyr)
 library(reshape2)
+library(cluster)
 
 plan(multisession(workers = detectCores() - 2))
 theme_set(theme_bw())
@@ -16,7 +17,7 @@ theme_update(
   aspect.ratio = 1
 )
 
-set.seed(2)
+set.seed(1)
 
 nspec = 20
 nres = 20
@@ -44,7 +45,7 @@ params = list(
   beta = 1,
   h = 1,
   I = makeI(nspec, nres),
-  p = array(rep(.01, nspec * nres^2), dim=c(nspec, nres, nres))
+  p = array(rep(0, nspec * nres^2), dim=c(nspec, nres, nres))
 )
 
 init_state = c(rep(1, params$nspec), rep(1, params$nres), 0)
@@ -99,10 +100,6 @@ find_num_alpha =
     return(num_alpha)
   }
 
-modularity = \(I) {
-  
-}
-
 sim = ode(y = init_state, times = seq(0, 30000, by = 1), func = model, parms = params)
 
 sim.df = as.data.frame(sim)
@@ -117,35 +114,65 @@ num_coexist = length(eql_abuns[eql_abuns > .1])
 df = c(eql_abuns, num_coexist) |> t() |> as_tibble()
 colnames(df) = c(paste0('N', seq(nspec)), 'num_coexist')
 
-hamming_dist = \(x, y) {
-  ans = sum(x != y)
-  return(ans)
-}
-
-dists = matrix(0, nrow = nspec, ncol = nspec)
-for (i in 1:nspec) {
-  for (j in 1:nspec) {
-    dists[i,j] = hamming_dist(params$I[i,], params$I[j,])
-  }
-}
-
 num_alpha = find_num_alpha(eql, eql_abuns, model, params)
-coexist_traits = params$I[eql_abuns > .1,]
 
-overall_dists = matrix(0, nrow = nspec, ncol = nspec)
-coex_dists = matrix(0, nrow = nrow(coexist_traits), ncol = nrow(coexist_traits))
-
+weights = matrix(0, nrow = nspec, ncol = nspec)
 for (i in 1:nspec) {
   for (j in 1:nspec) {
-    overall_dists[i,j] = hamming_dist(params$I[i,], params$I[j,])
+    weights[i,j] = eql_abuns[i] * eql_abuns[j]
   }
 }
 
-for (i in 1:nrow(coexist_traits)) {
-  for (j in 1:nrow(coexist_traits)) {
-    coex_dists[i,j] = hamming_dist(coexist_traits[i,], coexist_traits[j,])
-  }
+coex_weight_d = as.matrix(dist(params$I, method = "binary")) * weights
+coex_weight_hc = hclust(as.dist(coex_weight_d))
+
+calculate_silhouette = function(d, hc, k) {
+  clusters = cutree(hc, k = k)
+  sil_width = silhouette(clusters, dist = d)
+  avg_silhouette = mean(sil_width[, "sil_width"])
+  return(avg_silhouette)
 }
 
-overall_avg_ham_dist = mean(dists)
-coexist_avg_ham_dist = mean(coex_dists)
+max_clusters = 5
+silhouette_scores = rep(-Inf, max_clusters)
+for (k in 2:max_clusters) {
+  silhouette_scores[k] = calculate_silhouette(coex_weight_d, coex_weight_hc, k)
+}
+
+optimal_clusters = print(which.max(silhouette_scores))
+
+membership = cutree(coex_weight_hc, k = optimal_clusters)
+plot(coex_weight_hc)
+
+
+nboot = 1000
+boot_optimal_clusters = rep(0, nboot)
+boot_silhouette_peaks = rep(0, nboot)
+for (i in 1:nboot) {
+  boot_I = matrix(0, nrow = nspec, ncol = nres)
+  for (j in 1:nres) {
+    col_j = params$I[,j]
+    boot_I[,j] = sample(col_j, replace = F)
+  }
+  boot_d = as.dist(as.matrix(dist(boot_I, method = "binary")) * weights)
+  boot_hc = hclust(boot_d)
+  boot_silhouette_scores = rep(-Inf, max_clusters)
+  for (k in 2:max_clusters) {
+    boot_silhouette_scores[k] = calculate_silhouette(as.dist(boot_d), boot_hc, k)
+  }
+  boot_optimal_clusters[i] = which.max(boot_silhouette_scores)
+  boot_silhouette_peaks[i] = max(boot_silhouette_scores)
+}
+
+hist(boot_optimal_clusters, xlab = "Optimal Amount of Clusters", ylab = "Frequency")
+hist(boot_silhouette_peaks, xlab = "Peak Silhouette Score", ylab = "Frequency")
+
+lb_nclust_ci = quantile(boot_optimal_clusters, probs = .025)
+ub_nclust_ci = quantile(boot_optimal_clusters, probs = .975)
+print(paste0('The 95% confidence interval for the number of clusters found by silhouette score is (', as.character(lb_nclust_ci), ', ', as.character(ub_nclust_ci), ')'))
+print(paste0('The number of clusters found in the true data is ', as.character(optimal_clusters)))
+
+lb_peak_ci = quantile(boot_silhouette_peaks, probs = .025)
+ub_peak_ci = quantile(boot_silhouette_peaks, probs = .975)
+print(paste0('The 95% confidence interval for the peak silhouette score is (', as.character(lb_peak_ci), ', ', as.character(ub_peak_ci), ')'))
+print(paste0('The peak silhouette score found in the true data is ', as.character(max(silhouette_scores))))

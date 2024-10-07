@@ -12,9 +12,6 @@ makeI = \(nspec, nres) {
   return(I * 1)
 }
 
-
-
-
 I = makeI(nspec, nres)
 
 params = list(
@@ -112,18 +109,18 @@ for (i in 1:nspec) {
 }
 eql_data = eql_data[-1,]
 
-k_max = 7
+k_max = 10
 true_errs = rep(0, k_max)
 null_errs = rep(0, k_max)
-nboot = 20
+nboot = 10
 for (k in 1:k_max) {
-  kmode = best_kmodes(eql_data, modes = k, nruns = 10)
+  kmode = best_kmodes(eql_data, modes = k, nruns = 5)
   true_errs[k] = sum(kmode$withindiff)
   replicate_err = rep(0, nboot)
   for (i in 1:nboot) {
     null_abuns = sample(eql_abuns, size = length(eql_abuns), replace = F)
     shuffled_data = get_null_shuffled_data(I, null_abuns)
-    null_kmode = best_kmodes(shuffled_data, modes = k, nruns = 10)
+    null_kmode = best_kmodes(shuffled_data, modes = k, nruns = 5)
     replicate_err[i] = sum(null_kmode$withindiff)
   }
   null_errs[k] = mean(replicate_err)
@@ -133,3 +130,6 @@ for (k in 1:k_max) {
 gap = null_errs - true_errs
 
 plot(1:k_max, gap, type = 'b')
+
+plot(1:k_max, null_errs, type = 'b', col = 'red')
+lines(1:k_max, true_errs, type = 'b', col = 'blue')

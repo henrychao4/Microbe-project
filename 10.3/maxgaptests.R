@@ -117,20 +117,21 @@ for (i in 1:nspec) {
 }
 eql_data = eql_data[-1,]
 
-k_max = 7
+k_max = 10
 init_clusgap = clusGap(init_data, FUNcluster = kmodes, K.max = k_max, B = 10, verbose = F)
 eql_clusgap = clusGap(eql_data, FUNcluster = kmodes, K.max = k_max, B = 10)
+#tibs_k = maxSE(eql_clusgap$Tab[,3], eql_clusgap$Tab[,4], method = 'Tibs2001SEmax')
 
-plot(1:k_max, init_clusgap$Tab[,3], type = 'b', xlab = 'k', ylab = 'Gap', main = 'Initial Abundances of 10 each')
+plot(1:k_max, init_clusgap$Tab[,3], type = 'b', xlab = 'k', ylab = 'Gap', main = 'Initial Abundances')
 plot(1:k_max, eql_clusgap$Tab[,3], type = 'b', xlab = 'k', ylab = 'Gap', main = 'Equilibrium Abundances')
 
-imax_gaps = rep(0, 5)
-emax_gaps = rep(0, 5)
+imax_gaps = rep(0, 10)
+emax_gaps = rep(0, 10)
 
 for (i in 1:5) {
   null_data = get_null_data(init_data)
   null_eql_data = get_null_data(eql_data)
-  icg = clusGap(null_data, FUNcluster = kmodes, K.max = 5, B = 10, verbose = F)
+  icg = clusGap(null_data, FUNcluster = kmodes, K.max = k_max, B = 10, verbose = F)
   ecg = clusGap(null_eql_data, FUNcluster = kmodes, K.max = k_max, B = 10, verbose = F)
   imax_gaps[i] = max(icg$Tab[,3])
   emax_gaps[i] = max(ecg$Tab[,3])
@@ -145,7 +146,3 @@ eq95 = quantile(emax_gaps, .95)
 print(paste0('True max gap for initial abundances: ', as.character(imax_gap), '. 95th percentile under the null: ', as.character(iq95)))
 
 print(paste0('True max gap for equilibrium abundances: ', as.character(emax_gap), '. 95th percentile under the null: ', as.character(eq95)))
-
-clusts = best_kmodes(eql_data, modes = 20, 10)
-print(sort(as.numeric(clusts$size)))
-print(sort(rounded_eql_abuns))

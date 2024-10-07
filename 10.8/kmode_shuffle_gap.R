@@ -22,8 +22,8 @@ theme_update(
 
 set.seed(1)
 
-nspec = 20
-nres = 20
+nspec = 30
+nres = 30
 
 rotate_vector = function(v, shift) {
   n = length(v)
@@ -47,7 +47,7 @@ rotate_vector = function(v, shift) {
 # }
 
 makeI = \(nspec, nres) {
-  width = 5
+  width = 7
   vec = c(rep(1, width), rep(0, nres - width))
   traits = rep(0, nspec)
   I = matrix(0, nrow = nspec, ncol = nres)
@@ -55,6 +55,7 @@ makeI = \(nspec, nres) {
     traits[i] = (i + floor(width/2)) %% nres
     I[i,] = rotate_vector(vec, (i-1))
   }
+  traits[traits == 0] = nres
   return(list(I = I, traits = traits))
 }
 
@@ -67,7 +68,7 @@ params = list(
   nres = nres,
   alpha = rep(0.05, nspec),
   mu = rep(.05, nspec),
-  rho = rnorm(nres, mean = .6, sd = 0) + c(rep(0,4), .4, rep(0,10), .4, rep(0,4)),
+  rho = rnorm(nres, mean = .6, sd = 0) + c(rep(0,9), .4, rep(0,9), .4, rep(0,9), .4),
   delta = rep(.05, nres),
   epsilon = .9,
   beta = 1,
@@ -108,24 +109,13 @@ model =
     return(list(c(dNdt, dRdt, dWdt)))
   }
 
-get_null_shuffled_data = \(I, abuns) {
-  shuffled_data = 0
-  rounded_abuns = round(abuns)
-  for (i in 1:nspec) {
-    rep_spec = matrix(rep(I[i,], rounded_abuns[i]), nrow = rounded_abuns[i], ncol = ncol(I), byrow = T)
-    shuffled_data = rbind(shuffled_data, rep_spec)
-  }
-  shuffled_data = shuffled_data[-1,]
-  return(shuffled_data)
-}
-
-best_kmodes = \(data, modes, nruns) {
+best_wKModes = \(data, modes, weights, nruns) {
   df = list()
   tot.withindiff_vec = rep(0, nruns)
   for (i in 1:nruns) {
-    k_modes = kmodes(data, modes = modes)
-    df[[i]] = k_modes
-    tot.withindiff_vec[i] = sum(k_modes$withindiff)
+    wk_modes = wKModes(data, modes = modes, weights = weights)
+    df[[i]] = wk_modes
+    tot.withindiff_vec[i] = wk_modes$tot.withindiff
   }
   idx = which.min(tot.withindiff_vec)
   return(df[[idx]])
@@ -147,50 +137,36 @@ colnames(df) = c(paste0('N', seq(nspec)), 'num_coexist')
 
 plot(traits, eql_abuns, type = 'h')
 
-eql_data = 0
-rounded_eql_abuns = round(eql_abuns)
-for (i in 1:nspec) {
-  rep_spec = matrix(rep(I[i,], rounded_eql_abuns[i]), nrow = rounded_eql_abuns[i], ncol = ncol(I), byrow = T)
-  eql_data = rbind(eql_data, rep_spec)
-}
-eql_data = eql_data[-1,]
-
 k_max = 7
 true_errs = rep(0, k_max)
 null_errs = rep(0, k_max)
-nboot = 10
+nboot = 30
+null_gaps = matrix(0, nrow = nboot, ncol = k_max)
 for (k in 1:k_max) {
-  kmode = best_kmodes(eql_data, modes = k, nruns = 10)
+  kmode = best_wKModes(I, modes = k, weights = eql_abuns, nruns = 10)
   true_errs[k] = sum(kmode$withindiff)
   replicate_err = rep(0, nboot)
   for (i in 1:nboot) {
     null_abuns = sample(eql_abuns, size = length(eql_abuns), replace = F)
-    shuffled_data = get_null_shuffled_data(I, null_abuns)
-    null_kmode = best_kmodes(shuffled_data, modes = k, nruns = 10)
+    null_kmode = best_wKModes(I, modes = k, weights = null_abuns, nruns = 10)
     replicate_err[i] = sum(null_kmode$withindiff)
   }
   null_errs[k] = mean(replicate_err)
+  
+  for (i in 1:nboot) {
+    null_gaps[,k] = null_errs[k] - replicate_err
+  }
+  
   print(k)
 }
+
+null_max_gaps = apply(null_gaps, 1, max)
+null_max_gap_q95 = quantile(null_max_gaps,.95)
 
 gap = null_errs - true_errs
 
 plot(1:k_max, gap, type = 'b')
 
-kmode = best_kmodes(eql_data, modes = 5, nruns = 10)$cluster
+best_wKModes(I, modes = 3, weights = eql_abuns, nruns = 10)
 
-membership = rep(0, nspec)
-for (k in 1:max(kmode)) {
-  clust = unique(eql_data[kmode == k,])
-  for (i in 1:nspec) {
-    for (j in 1:nrow(clust)) {
-      if (identical(I[i,], clust[j,])) {
-        membership[i] = k
-      }
-    }
-  }
-}
-
-colors = c('red', 'blue', 'green', 'orange', 'purple')
-
-plot(traits, eql_abuns, type = 'h', col = colors[membership])
+print(paste0('True max gap for equilibrium abundances: ', as.character(max(gap)), '. 95th percentile under the null: ', as.character(null_max_gap_q95)))

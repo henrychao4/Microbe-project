@@ -1,6 +1,10 @@
+library(purrr)
 library(ggplot2)
 library(deSolve)
 library(klaR)
+library(reshape2)
+library(tibble)
+library(cluster)
 
 set.seed(3)
 
@@ -48,7 +52,7 @@ params = list(
   p = array(rep(0, nspec * nres^2), dim = c(nspec, nres, nres))
 )
 
-init_abuns = rep(1, params$nspec)
+init_abuns = rep(10, params$nspec)
 init_res = rep(1, params$nres)
 init_state = c(init_abuns, init_res, 0)
 
@@ -82,17 +86,17 @@ model =
     return(list(c(dNdt, dRdt, dWdt)))
   }
 
-get_null_data = \(data) {
-  n = nrow(data)
-  m = ncol(data)
-  null_data = matrix(0, nrow = n, ncol = m)
-  
-  for (j in 1:m) {
-    null_data[,j] = sample(data[,j], n, replace = T)
+get_null_shuffled_data = \(I, abuns) {
+  shuffled_data = 0
+  rounded_abuns = round(abuns)
+  for (i in 1:nspec) {
+    rep_spec = matrix(rep(I[i,], rounded_abuns[i]), nrow = rounded_abuns[i], ncol = ncol(I), byrow = T)
+    shuffled_data = rbind(shuffled_data, rep_spec)
   }
-  
-  return(null_data)
+  shuffled_data = shuffled_data[-1,]
+  return(shuffled_data)
 }
+
 
 best_kmodes = \(data, modes, nruns) {
   df = list()
@@ -136,9 +140,31 @@ for (i in 1:nspec) {
 }
 eql_data = eql_data[-1,]
 
-k_max = 15
-init_clusgap = clusGap(init_data, FUNcluster = kmodes, K.max = k_max, B = 10, verbose = F)
-eql_clusgap = clusGap(eql_data, FUNcluster = kmodes, K.max = k_max, B = 10)
+# k_max = 15
+# init_clusgap = clusGap(init_data, FUNcluster = kmodes, K.max = k_max, B = 10, verbose = F)
+# eql_clusgap = clusGap(eql_data, FUNcluster = kmodes, K.max = k_max, B = 10)
+# 
+# plot(1:k_max, init_clusgap$Tab[,3], type = 'b', xlab = 'k', ylab = 'Gap', main = 'Initial Abundances of 10 each')
+# plot(1:k_max, eql_clusgap$Tab[,3], type = 'b', xlab = 'k', ylab = 'Gap', main = 'Equilibrium Abundances')
 
-plot(1:k_max, init_clusgap$Tab[,3], type = 'b', xlab = 'k', ylab = 'Gap', main = 'Initial Abundances of 1 each')
-plot(1:k_max, eql_clusgap$Tab[,3], type = 'b', xlab = 'k', ylab = 'Gap', main = 'Equilibrium Abundances')
+k_max = 10
+true_errs = rep(0, k_max)
+null_errs = rep(0, k_max)
+nboot = 10
+for (k in 1:k_max) {
+  kmode = best_kmodes(eql_data, modes = k, nruns = 10)
+  true_errs[k] = sum(kmode$withindiff)
+  replicate_err = rep(0, nboot)
+  for (i in 1:nboot) {
+    null_abuns = sample(eql_abuns, size = length(eql_abuns), replace = F)
+    shuffled_data = get_null_shuffled_data(I, null_abuns)
+    null_kmode = best_kmodes(shuffled_data, modes = k, nruns = 5)
+    replicate_err[i] = sum(null_kmode$withindiff)
+  }
+  null_errs[k] = mean(replicate_err)
+  print(k)
+}
+
+gap = null_errs - true_errs
+
+plot(1:k_max, gap, type = 'b')
