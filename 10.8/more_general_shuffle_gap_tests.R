@@ -20,55 +20,24 @@ theme_update(
   aspect.ratio = 1
 )
 
-set.seed(3)
+set.seed(1)
 
-nspec = 30
-nres = 30
-
-rotate_vector = function(v, shift) {
-  n = length(v)
-  if (shift == 0) {
-    return(v)
-  }
-  shift = shift %% n
-  v_rotated = c(v[(n-shift+1):n], v[1:(n-shift)])
-  return(v_rotated)
-}
-
-# makeI = \(nspec, nres) {
-#   vec = c(rep(1, nspec/nres), rep(0, nres - nspec/nres))
-#   traits = rep(0, nspec)
-#   I = matrix(0, nrow = nspec, ncol = nres)
-#   for (i in 1:nspec) {
-#     traits[i] = sample(0:(nres-1), 1)
-#     I[i,] = rotate_vector(vec, traits[i])
-#   }
-#   return(list(I = I, traits = traits))
-# }
+nspec = 40
+nres = 40
 
 makeI = \(nspec, nres) {
-  width = 7
-  vec = c(rep(1, width), rep(0, nres - width))
-  traits = rep(0, nspec)
-  I = matrix(0, nrow = nspec, ncol = nres)
-  for (i in 1:nspec) {
-    traits[i] = (i + floor(width/2)) %% nres
-    I[i,] = rotate_vector(vec, (i-1))
-  }
-  traits[traits == 0] = nres
-  return(list(I = I, traits = traits))
+  I = matrix(rbernoulli(nspec * nres, p = .5), nrow = nspec, ncol = nres)
+  return(I * 1)
 }
 
-obj = makeI(nspec, nres)
-I = obj$I
-traits = obj$trait
+I = makeI(nspec, nres)
 
 params = list(
   nspec = nspec,
   nres = nres,
   alpha = rep(0.05, nspec),
   mu = rep(.05, nspec),
-  rho = rnorm(nres, mean = .6, sd = 0) + c(rep(0,9), .4, rep(0,9), .4, rep(0,9), .4), #3 good res
+  rho = rnorm(nres, mean = .6, sd = .1), #3 good res
   #rho = rnorm(nres, mean = .6, sd = 0) + c(rep(0,4), .4, rep(0,4), .4, rep(0,4), .4, rep(0,4), .4, rep(0,4), .4, rep(0,4), .4), #6 good res
   delta = rep(.05, nres),
   epsilon = .9,
@@ -136,12 +105,10 @@ num_coexist = length(eql_abuns[eql_abuns > .1])
 df = c(eql_abuns, num_coexist) |> t() |> as_tibble()
 colnames(df) = c(paste0('N', seq(nspec)), 'num_coexist')
 
-plot(traits, eql_abuns, type = 'h', xlab = 'Trait', ylab = 'Abundance at Equilibrium', main = '3 Super Resources')
-
 k_max = 7
 true_errs = rep(0, k_max)
 null_errs = rep(0, k_max)
-nboot = 30
+nboot = 20
 
 for (k in 1:k_max) {
   kmode = best_wKModes(I, modes = k, weights = eql_abuns, nruns = 10)
