@@ -3,6 +3,7 @@ library(deSolve)
 library(parallel)
 library(furrr)
 library(matlib)
+library(reshape2)
 source("KmeansGap.r")
 
 plan(multisession(workers = detectCores() - 2))

@@ -83,12 +83,15 @@ for (i in 1:nrow(logW_mat)) {
   tbl = gaps$Tab
   logW_mat[i,] = tbl[,1]
 }
-W_vec = apply(logW_mat, 2 , min)
+W_vec = apply(logW_mat, 2, min)
 
 gap_stat = clusGap(I, FUN = wKModes, K.max = 7, B = 50)
+
+
+
 tbl = gap_stat$Tab
 
-gap = W_vec - tbl[,2]
+gap = tbl[,2] - W_vec
 
 plot(W_vec, type = 'b', col = 'red')
 lines(tbl[,2], type = 'b', col = 'blue')

@@ -116,56 +116,25 @@ for (i in 1:nspec) {
   }
 }
 
-coex_weight_d = as.matrix(dist(params$I, method = "binary"))
-coex_weight_hc = hclust(as.dist(coex_weight_d))
+exps = seq(0, 1, .05)
+optimal_clusters = rep(0, length(exps))
 
-calculate_silhouette = function(d, hc, k) {
-  clusters = cutree(hc, k = k)
-  sil_width = silhouette(clusters, dist = d)
-  avg_silhouette = mean(sil_width[, "sil_width"])
-  return(avg_silhouette)
-}
-
-max_clusters = 5
-silhouette_scores = rep(-Inf, max_clusters)
-for (k in 2:max_clusters) {
-  silhouette_scores[k] = calculate_silhouette(coex_weight_d, coex_weight_hc, k)
-}
-
-optimal_clusters = print(which.max(silhouette_scores))
-
-membership = cutree(coex_weight_hc, k = optimal_clusters)
-plot(coex_weight_hc)
-
-
-nboot = 1000
-boot_optimal_clusters = rep(0, nboot)
-boot_silhouette_peaks = rep(0, nboot)
-for (i in 1:nboot) {
-  boot_I = matrix(0, nrow = nspec, ncol = nres)
-  for (j in 1:nres) {
-    col_j = params$I[,j]
-    boot_I[,j] = sample(col_j, replace = F)
+for (i in 1:length(exps)) {
+  coex_weight_d = as.matrix(dist(params$I, method = "binary")) / weights^(exps[i])
+  coex_weight_hc = hclust(as.dist(coex_weight_d))
+  
+  calculate_silhouette = function(d, hc, k) {
+    clusters = cutree(hc, k = k)
+    sil_width = silhouette(clusters, dist = d)
+    avg_silhouette = mean(sil_width[, "sil_width"])
+    return(avg_silhouette)
   }
-  boot_d = as.dist(as.matrix(dist(boot_I, method = "binary")) * weights)
-  boot_hc = hclust(boot_d)
-  boot_silhouette_scores = rep(-Inf, max_clusters)
+  
+  max_clusters = 5
+  silhouette_scores = rep(-Inf, max_clusters)
   for (k in 2:max_clusters) {
-    boot_silhouette_scores[k] = calculate_silhouette(as.dist(boot_d), boot_hc, k)
+    silhouette_scores[k] = calculate_silhouette(coex_weight_d, coex_weight_hc, k)
   }
-  boot_optimal_clusters[i] = which.max(boot_silhouette_scores)
-  boot_silhouette_peaks[i] = max(boot_silhouette_scores)
+  
+  optimal_clusters[i] = which.max(silhouette_scores)
 }
-
-hist(boot_optimal_clusters, xlab = "Optimal Amount of Clusters", ylab = "Frequency")
-hist(boot_silhouette_peaks, xlab = "Peak Silhouette Score", ylab = "Frequency")
-
-lb_nclust_ci = quantile(boot_optimal_clusters, probs = .025)
-ub_nclust_ci = quantile(boot_optimal_clusters, probs = .975)
-print(paste0('The 95% confidence interval for the number of clusters found by silhouette score is (', as.character(lb_nclust_ci), ', ', as.character(ub_nclust_ci), ')'))
-print(paste0('The number of clusters found in the true data is ', as.character(optimal_clusters)))
-
-lb_peak_ci = quantile(boot_silhouette_peaks, probs = .025)
-ub_peak_ci = quantile(boot_silhouette_peaks, probs = .975)
-print(paste0('The 95% confidence interval for the peak silhouette score is (', as.character(lb_peak_ci), ', ', as.character(ub_peak_ci), ')'))
-print(paste0('The peak silhouette score found in the true data is ', as.character(max(silhouette_scores))))

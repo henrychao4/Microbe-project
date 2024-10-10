@@ -165,7 +165,7 @@ for (k in 1:k_max) {
   null_gaps[,k] = null_errs[k] - replicate_err[,k]
 }
 
-null_max_gaps = apply(null_gaps, 2, max)
+null_max_gaps = apply(null_gaps, 1, max)
 null_max_gap_q95 = quantile(null_max_gaps, .95)
 
 gap = null_errs - true_errs

@@ -32,7 +32,7 @@ makeI = \(nclust, nspec, nres) {
   return(I)
 }
 
-data = makeI(nclust, nspec, nres)
+data = as.matrix(makeI(nclust, nspec, nres))
 #weights = runif(nspec)
 weights = c(rep(.01, nspec/5), rep(.9, 4 * nspec / 5))
 #weights = rep(1, nspec)
@@ -42,7 +42,7 @@ weighted_hamming_dist = function(vec1, vec2, weight) {
   return(distance)
 }
 
-weighted_mode = function(x, weights) {
+weighted_mode = \(x, weights) {
   unique_vals = unique(x)
   weighted_freq = sapply(unique_vals, function(val) {
     sum(weights[x == val])
@@ -51,7 +51,7 @@ weighted_mode = function(x, weights) {
   #unique_vals[which.max(rank(weighted_freq, ties.method = "random"))]
 }
 
-init_centers = function(data, weights, k) {
+init_centers = \(data, weights, k) {
   n = nrow(data)
   centers = matrix(0, nrow = k, ncol = ncol(data))
   first_center_idx = sample(1:n, 1)
@@ -73,7 +73,7 @@ init_centers = function(data, weights, k) {
   return(centers)
 }
 
-weighted_k_modes = function(data, weights, k, max_iter) {
+weighted_k_modes = \(data, weights, k, max_iter) {
   centers = init_centers(data, weights, k)
   #centers = data[sample(1:nrow(data), k), ]
   clusters = rep(0, nrow(data))
@@ -106,7 +106,7 @@ weighted_k_modes = function(data, weights, k, max_iter) {
   list(clusters = clusters, centers = centers)
 }
 
-calculate_within_cluster_error = function(data, clusters, centers, weights) {
+calculate_within_cluster_error = \(data, clusters, centers, weights) {
   total_error = 0
   
   for (i in unique(clusters)) {
@@ -123,7 +123,7 @@ calculate_within_cluster_error = function(data, clusters, centers, weights) {
   return(total_error)
 }
 
-get_null_data = function(data) {
+get_null_data = \(data) {
   n = nrow(data)
   m = ncol(data)
   null_data = matrix(0, nrow = n, ncol = m)
@@ -133,6 +133,40 @@ get_null_data = function(data) {
   }
   
   return(null_data)
+}
+
+find_optimal_clusters = \(data, weights, max_iter, n_bootstrap, k_max) {
+  k_vec = 2:k_max
+  clust_dispersion = rep(0, length(k_vec))
+  for (i in 1:length(k_vec)) {
+    errs = rep(0, 10)
+    for (j in 1:10) {
+      kmode = weighted_k_modes(data, weights, k_vec[i], max_iter = max_iter)
+      errs[j] = calculate_within_cluster_error(data, kmode$clusters, kmode$centers, weights)
+    }
+    clust_dispersion[i] = log(min(errs))
+  }
+  
+  n_bootstrap = n_bootstrap
+  null_clust_dispersion = matrix(0, nrow = n_bootstrap, ncol = length(k_vec))
+  
+  for (i in 1:n_bootstrap) {
+    null_data = get_null_data(data)
+    for (j in 1:length(k_vec)) {
+      errs = rep(0, 10)
+      for (k in 1:10) {
+        kmode = weighted_k_modes(null_data, weights, k_vec[j], max_iter = 100)
+        errs[k] = calculate_within_cluster_error(null_data, kmode$clusters, kmode$centers, weights)
+      }
+      null_clust_dispersion[i,j] = log(min(errs))
+    }
+  }
+
+  null_clust_dispersion_avg = colSums(null_clust_dispersion) / n_bootstrap
+  
+  gap = null_clust_dispersion_avg - clust_dispersion
+
+  return((which.max(gap) + 1))
 }
 
 k_vec = 2:8
@@ -163,11 +197,36 @@ for (i in 1:n_bootstrap) {
 
 null_clust_dispersion_avg = colSums(null_clust_dispersion) / n_bootstrap
 
+k1_center = apply(data, 2, weighted_mode, weights = weights)
+k1_dispersion = 0
+  
+for (j in 1:nrow(data)) {
+  dissimilarity = sum((data[j, ] != k1_center) * weights[j])
+  k1_dispersion = k1_dispersion + dissimilarity
+}
+k1_dispersion = log(k1_dispersion)
+
+null_k1_dispersion = rep(0, 10)
+for (i in 1:10) {
+  null_data = get_null_data(data)
+  null_k1_center = apply(null_data, 2, weighted_mode, weights = weights)
+  disp = 0
+  for (j in 1:nrow(data)) {
+    dissimilarity = sum((null_data[j, ] != null_k1_center) * weights[j])
+    disp = disp + dissimilarity
+    null_k1_dispersion[i] = log(disp)
+  }
+}
+
+null_k1_dispersion_avg = mean(null_k1_dispersion)
+
+k_vec = c(1, k_vec)
+clust_dispersion = c(k1_dispersion, clust_dispersion)
+null_clust_dispersion_avg = c(null_k1_dispersion_avg, null_clust_dispersion_avg)
+
 gap = null_clust_dispersion_avg - clust_dispersion
 
 plot(k_vec, clust_dispersion, type = 'b', col = 'blue')
 lines(k_vec, null_clust_dispersion_avg, type = 'b', col = 'red')
 
 plot(k_vec, gap, type = 'b')
-
-#now have to implement to the actual model

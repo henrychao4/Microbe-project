@@ -43,17 +43,19 @@ k_max = 5
 for (i in 1:n_bootstrap) {
   null_data = get_null_data(data)
   clusgap = clusGap(null_data, FUNcluster = kmeans, K.max = k_max, B = 10, verbose = F)
-  boot_k[i] = which.max(clusgap$Tab[,3])
+  boot_k[i] = maxSE(clusgap$Tab[,3], clusgap$Tab[,4], method = 'Tibs2001SEmax')
   boot_max_gaps[i] = max(clusgap$Tab[,3])
 }
 
+max_gap_bound = quantile(boot_max_gaps, .95)
+k_bound = quantile(boot_k, .95)
+
 clusgap = clusGap(data, FUNcluster = kmeans, K.max = k_max, B = 100, verbose = F)
 true_max_gap = max(clusgap$Tab[,3])
+true_k = maxSE(clusgap$Tab[,3], clusgap$Tab[,4], method = 'Tibs2001SEmax')
+
+quantile(boot_k, .95)
+
 
 hist(boot_k)
 hist(boot_max_gaps)
-
-hist(boot_max_gaps[boot_k == 1])
-hist(boot_max_gaps[boot_k == 2])
-hist(boot_max_gaps[boot_k == 3])
-hist(boot_max_gaps[boot_k == 4])

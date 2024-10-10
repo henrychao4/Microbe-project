@@ -156,10 +156,10 @@ avg_boot_yanye_logW_vec = colSums(boot_yanye_logW) / n_bootstrap
 se_tibs = sqrt(1 + 1/n_bootstrap) * apply(boot_tibs_logW, 2, sd)
 se_yanye = sqrt(1 + 1/n_bootstrap) * apply(boot_yanye_logW, 2, sd)
 
-plot(k_vec, avg_boot_tibs_logW_vec, type = 'b', col = 'red', main = 'Tibshirani W', ylim = c(-5, 10))
+plot(k_vec, avg_boot_tibs_logW_vec, type = 'b', col = 'red', main = 'Tibshirani W', ylim = c(-10, 10))
 lines(k_vec, tibs_logW_vec, type = 'b', col = 'blue')
 
-plot(k_vec, avg_boot_yanye_logW_vec, type = 'b', col = 'red', main = 'Yan & Ye W', ylim = c(-5, 10))
+plot(k_vec, avg_boot_yanye_logW_vec, type = 'b', col = 'red', main = 'Yan & Ye W', ylim = c(-10, 10))
 lines(k_vec, yanye_logW_vec, type = 'b', col = 'blue')
 
 tibs_gap = avg_boot_tibs_logW_vec - tibs_logW_vec

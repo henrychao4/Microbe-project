@@ -5,6 +5,7 @@ library(cowplot)
 library(SWKM)
 library(furrr)
 library(parallel)
+library(tibble)
 
 
 theme_set(theme_bw())

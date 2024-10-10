@@ -160,7 +160,7 @@ find_optimal_clusters = \(data, weights, max_iter, n_bootstrap, k_max) {
   
   plot(k_vec, gap, type = 'b')
   
-  return(which.max(gap))
+  return((which.max(gap)))
 }
 
 set.seed(8)
@@ -241,4 +241,4 @@ colnames(df) = c(paste0('N', seq(nspec)), 'num_coexist')
 
 find_optimal_clusters(data = I, weights = rep(1, nspec), max_iter = 100, n_bootstrap = 20, k_max = 5)
 
-find_optimal_clusters(data = I, weights = eql_abuns + .0001, max_iter = 100, n_bootstrap = 20, k_max = 5)
+find_optimal_clusters(data = I, weights = eql_abuns + .01, max_iter = 100, n_bootstrap = 20, k_max = 5)

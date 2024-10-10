@@ -58,7 +58,9 @@ params = list(
   C = C
 )
 
-init_state = c(rep(1, params$nspec), rep(1, params$nres))
+init_abuns = rep(10, nspec)
+init_res = rep(1, nres)
+init_state = c(init_abuns, init_res)
 
 sim = ode(y = init_state, times = seq(0, 15000), func = MacArthur, parms = params)
 sim.df = as.data.frame(sim)
@@ -71,9 +73,13 @@ num_coexist = length(eql_abuns[eql_abuns > .1])
 p = ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic() + ggtitle('MacArthur')
 #print(p)
 
-init_data = as.data.frame(C)
-init_data$N = rep(1, nspec)
-#init_data$N = sample(c(1,2,3), nspec, replace = T)
+init_data = 0
+rounded_init_abuns = round(init_abuns)
+for (i in 1:nspec) {
+  rep_spec = matrix(rep(C[i,], rounded_init_abuns[i]), nrow = rounded_init_abuns[i], ncol = ncol(C), byrow = T)
+  init_data = rbind(init_data, rep_spec)
+}
+init_data = init_data[-1,]
 
 eql_data = as.data.frame(C)
 eql_data$N = round(eql_abuns)
@@ -95,7 +101,7 @@ for (i in 1:nspec) {
 }
 dupe_data = dupe_data[-1,]
 
-init_clusgap = clusGap(C, FUNcluster = kmeans, K.max = 19, B = 20)
+init_clusgap = clusGap(init_data, FUNcluster = kmeans, K.max = 19, B = 20)
 eql_clusgap = clusGap(dupe_data, FUNcluster = kmeans, K.max = 19, B = 20)
 
 plot(1:19, init_clusgap$Tab[,3], type = 'b')
