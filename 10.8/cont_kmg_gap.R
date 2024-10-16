@@ -33,7 +33,7 @@ circ_dist = function(vec1, vec2) {
 }
 
 nspec = 30
-nres = 5
+nres = 3
 
 res_trait = seq(0, 1, l = nres)
 spec_trait = seq(0, 1, l = nspec) + rnorm(nspec, mean = 0, sd = .005)
@@ -72,3 +72,5 @@ kmg_data$N = round(eql_abuns)
 kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = 8)
 
 plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b')
+
+print(kmg_gap)
