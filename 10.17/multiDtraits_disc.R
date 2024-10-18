@@ -22,7 +22,7 @@ theme_update(
 
 set.seed(3)
 
-nspec = 30
+nspec = 50
 nres = 30
 
 res_trait_1 = runif(nres, min = 0, max = (nres - 1) / nres)

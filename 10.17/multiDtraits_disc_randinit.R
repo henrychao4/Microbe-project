@@ -45,7 +45,7 @@ sigma_1 = .1
 sigma_2 = .1
 #C = exp(- ((dists_1^2 / sigma_1) + (dists_2^2 / sigma_2)))
 C = exp(-pmax((dists_1^2 / sigma_1), (dists_2^2 / sigma_2)))
-I = (C > .5) * 1
+I = (C > .3) * 1
 
 params = list(
   nspec = nspec,
