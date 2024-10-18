@@ -35,7 +35,7 @@ circ_dist = function(vec1, vec2) {
 nspec = 30
 nres = 3
 
-res_trait = seq(0, 1, l = nres)
+res_trait = seq(0, (nres - 1) / nres, l = nres)
 spec_trait = seq(0, 1, l = nspec) + rnorm(nspec, mean = 0, sd = .005)
 dists = circ_dist(spec_trait, res_trait)
 C = exp(-dists^2 / .05)
