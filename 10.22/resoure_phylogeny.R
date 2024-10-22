@@ -18,7 +18,7 @@ P[lower.tri(P)] = runif(((nres)^2 - nres) / 2, min = 0, max = 1)
 #P[lower.tri(P)] = sample(x = c(.1, .9), size = ((nres)^2 - nres) / 2, replace = T, prob = c(.5, .5))
 P[upper.tri(P)] = t(P)[upper.tri(P)]
 
-spec_traits = rep(1:nres, each = nspec / nres)
+spec_traits = sample.int(nres, nspec, replace = T)
 
 C = matrix(0, nrow = nspec, ncol = nres)
 I = matrix(0, nrow = nspec, ncol = nres)
@@ -136,7 +136,7 @@ for (k in 1:k_max) {
 
 true_errs = rep(0, k_max)
 for (k in 1:k_max) {
-  kmode = best_wKModes(I, modes = k, weights = eql_abuns, nruns = 20)
+  kmode = best_wKModes(I, modes = k, weights = eql_abuns, nruns = 10)
   true_errs[k] = sum(kmode$withindiff)
 }
 

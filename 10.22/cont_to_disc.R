@@ -71,8 +71,6 @@ kmg_data = as.data.frame(C)
 kmg_data$N = round(eql_abuns)
 kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = 10)
 
-plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b')
-
 print(kmg_gap)
 
 I = (C > .3) * 1
@@ -135,7 +133,9 @@ null_max_gap_q95 = quantile(null_max_gaps, .95)
 
 gap = null_errs - true_errs
 
-plot(1:k_max, gap, type = 'b', xlab = 'k', ylab = 'Gap')
+plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b', xlab = 'k', ylab = 'Gap', main = 'Continuous Gap')
+
+plot(1:k_max, gap, type = 'b', xlab = 'k', ylab = 'Gap', main = 'Discrete Gap')
 
 print(paste0('True max gap for equilibrium abundances: ', as.character(max(gap)), '. 95th percentile under the null: ', as.character(null_max_gap_q95)))
 
