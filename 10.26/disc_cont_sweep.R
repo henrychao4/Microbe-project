@@ -103,9 +103,15 @@ discrete_gap = \(dat, k_max, nboot) {
 nspec = 240
 nres = 6
 
-w_2_vec = seq(0, .1, by = .005)
+w_2_vec = seq(0, .1, by = .01)
+
 cont_p_val_vec = rep(0, length(w_2_vec))
+cont_opt_k_vec = rep(0, length(w_2_vec))
+
 disc_p_val_vec = rep(0, length(w_2_vec))
+disc_opt_k_vec = rep(0, length(w_2_vec))
+
+three_bin_p_val = rep(0, length(w_2_vec))
 
 for (w in 1:length(w_2_vec)) {
   res_trait_1 = seq(0, (nres - 1) / nres, l = nres)
@@ -117,7 +123,7 @@ for (w in 1:length(w_2_vec)) {
   dists_2 = circ_dist(spec_trait_2, res_trait_2)
   w_1 = 1 - w_2_vec[w]
   w_2 = w_2_vec[w]
-  C = exp(- ((w_1 * dists_1^2) + (w_2 * dists_2^2)) / .01)
+  C = exp(-((w_1 * dists_1^2) + (w_2 * dists_2^2)) / .01)
   
   params = list(
     nspec = nspec,
@@ -156,9 +162,18 @@ for (w in 1:length(w_2_vec)) {
   disc_gap = discrete_gap(dat = I, k_max = k_max, nboot = 50)
   
   cont_p_val_vec[w] = kmg_gap$p.value
+  cont_opt_k_vec[w] = kmg_gap$khat
+  
   disc_p_val_vec[w] = disc_gap$p_val
+  disc_opt_k_vec[w] = disc_gap$opt_k
+  
 }
 
 plot(w_2_vec, cont_p_val_vec, ylim = c(0,1), type = 'b', xlab = 'Noise from other trait axis', ylab = 'p-value for clustering', col = 'red')
 lines(w_2_vec, disc_p_val_vec, type = 'b', col = 'blue')
 abline(h = .05)
+legend("topleft", legend = c("Continuous", "Discrete"), col = c("red", "blue"), lty = 1)
+
+plot(w_2_vec, cont_opt_k_vec, ylim = c(0, k_max), type = 'b', xlab = 'Noise from other trait axis', ylab = 'Optimal k from gap statistic', col = 'red')
+lines(w_2_vec, disc_opt_k_vec, type = 'b', col = 'blue')
+legend("topleft", legend = c("Continuous", "Discrete"), col = c("red", "blue"), lty = 1)

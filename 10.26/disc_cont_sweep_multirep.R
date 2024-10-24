@@ -103,67 +103,78 @@ discrete_gap = \(dat, k_max, nboot) {
 nspec = 240
 nres = 6
 
-res_trait_1 = seq(0, (nres - 1) / nres, l = nres)
-res_trait_2 = seq(0, (nres - 1) / nres, l = nres)
-spec_trait_1 = seq(0, (nspec - 1) / nspec, l = nspec)
-#spec_trait_1 = sample(spec_trait_1, size = length(spec_trait_1), replace = F)
-spec_trait_2 = seq(0, (nspec - 1) / nspec, l = nspec)
-spec_trait_2 = sample(spec_trait_2, size = length(spec_trait_2), replace = F)
-dists_1 = circ_dist(spec_trait_1, res_trait_1)
-#dists_2 = 0
-dists_2 = circ_dist(spec_trait_2, res_trait_2)
-w_1 = .97
-w_2 = 0.03
-C = exp(- ((w_1 * dists_1^2) + (w_2 * dists_2^2)) / .015)
-#C = exp(-pmax((dists_1^2 / sigma_1), (dists_2^2 / sigma_2)))
+w_2_vec = seq(0, .1, by = .01)
 
-params = list(
-  nspec = nspec,
-  nres = nres,
-  alpha = .05,
-  r = 500,
-  K = 1,
-  m = .2,
-  C = C
-)
+cont_p_val_vec = rep(0, length(w_2_vec))
+cont_opt_k_vec = rep(0, length(w_2_vec))
 
-init_abuns = rep(5, params$nspec)
-init_res = rep(5, params$nres)
-init_state = c(init_abuns, init_res)
+disc_p_val_vec = rep(0, length(w_2_vec))
+disc_opt_k_vec = rep(0, length(w_2_vec))
 
-sim = ode(y = init_state, times = seq(0, 15000), func = MacArthur, parms = params)
-sim.df = as.data.frame(sim)
-spec.abuns = sim.df[-((nspec+2):(nspec + nres + 2))]
-abuns.df = melt(spec.abuns, id.vars='time')
-eql = tail(sim, 1)[-1]
-eql_abuns = eql[0:nspec]
-num_coexist = length(eql_abuns[eql_abuns > .1])
+three_bin_p_val = rep(0, length(w_2_vec))
 
-p <- ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic() + ggtitle('MacArthur')
-#print(p)
+for (w in 1:length(w_2_vec)) {
+  cpv_samp = rep(0, 5)
+  dpv_samp = rep(0, 5)
+  for (i in 1:5) {
+    res_trait_1 = seq(0, (nres - 1) / nres, l = nres)
+    res_trait_2 = seq(0, (nres - 1) / nres, l = nres)
+    spec_trait_1 = seq(0, (nspec - 1) / nspec, l = nspec)
+    spec_trait_2 = seq(0, (nspec - 1) / nspec, l = nspec)
+    spec_trait_2 = sample(spec_trait_2, size = length(spec_trait_2), replace = F)
+    dists_1 = circ_dist(spec_trait_1, res_trait_1)
+    dists_2 = circ_dist(spec_trait_2, res_trait_2)
+    w_1 = 1 - w_2_vec[w]
+    w_2 = w_2_vec[w]
+    C = exp(-((w_1 * dists_1^2) + (w_2 * dists_2^2)) / .01)
+    
+    params = list(
+      nspec = nspec,
+      nres = nres,
+      alpha = .05,
+      r = 500,
+      K = 1,
+      m = .2,
+      C = C
+    )
+    
+    init_abuns = rep(5, params$nspec)
+    init_res = rep(5, params$nres)
+    init_state = c(init_abuns, init_res)
+    
+    sim = ode(y = init_state, times = seq(0, 15000), func = MacArthur, parms = params)
+    sim.df = as.data.frame(sim)
+    spec.abuns = sim.df[-((nspec+2):(nspec + nres + 2))]
+    abuns.df = melt(spec.abuns, id.vars='time')
+    eql = tail(sim, 1)[-1]
+    eql_abuns = eql[0:nspec]
+    num_coexist = length(eql_abuns[eql_abuns > .1])
+    
+    p <- ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic() + ggtitle('MacArthur')
+    #print(p)
+    
+    plot(spec_trait_1, eql_abuns, type = 'h')
+    
+    k_max = 8
+    
+    kmg_data = as.data.frame(C)
+    kmg_data$N = round(eql_abuns)
+    kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = k_max)
+    
+    I = (C > .3) * 1
+    disc_gap = discrete_gap(dat = I, k_max = k_max, nboot = 50)
+    
+    cpv_samp[i] = kmg_gap$p.value
+    dpv_samp[i] = disc_gap$p_val
+    
+  }
+  cont_p_val_vec[w] = mean(cpv_samp)
+  disc_p_val_vec[w] = mean(dpv_samp)
+  
+}
 
-plot(spec_trait_1, eql_abuns, type = 'h')
+plot(w_2_vec, cont_p_val_vec, ylim = c(0,1), type = 'b', xlab = 'Noise from other trait axis', ylab = 'p-value for clustering', col = 'red')
+lines(w_2_vec, disc_p_val_vec, type = 'b', col = 'blue')
+abline(h = .05)
+legend("topleft", legend = c("Continuous", "Discrete"), col = c("red", "blue"), lty = 1)
 
-k_max = 8
-
-kmg_data = as.data.frame(C)
-kmg_data$N = round(eql_abuns)
-kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = k_max)
-
-print(kmg_gap)
-plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b', xlab = 'k', ylab = 'Gap', main = 'Continuous Gap')
-
-# I = matrix(0, nrow = nspec, ncol = nres)
-# I[(C > 0) & (C < .2)] = 0
-# I[(C > .2) & (C < .4)] = 1
-# I[(C > .4) & (C < .6)] = 2
-# I[(C > .6) & (C < .8)] = 3
-# I[(C > .8) & (C < 1)] = 4
-
-I = (C > .3) * 1
-
-disc_gap = discrete_gap(dat = I, k_max = k_max, nboot = 50)
-
-print(disc_gap)
-
-plot(disc_gap$k, disc_gap$gap, type = 'b', xlab = 'k', ylab = 'Gap', main = 'Discrete Gap')
