@@ -54,12 +54,12 @@ bootstrap_replicate = \(I = I, eql_abuns = eql_abuns, k_max){
   return(replicate_err)
 }
 
-discrete_gap = \(dat, k_max, nboot) {
+discrete_gap = \(dat, eql_abuns, k_max, nboot) {
   numCores = detectCores()
   cl = makeCluster(numCores)
   
   clusterExport(cl, varlist = c("bootstrap_replicate", "I", "eql_abuns", "best_wKModes", "wKModes"))
-  inputs = replicate(nboot, list(I = I, eql_abuns = eql_abuns, k_max = k_max), simplify = FALSE)
+  inputs = replicate(nboot, list(I = dat, eql_abuns = eql_abuns, k_max = k_max), simplify = FALSE)
   
   results = clusterApply(cl, inputs, function(input) {
     bootstrap_replicate(input$I, input$eql_abuns, input$k_max)
@@ -106,22 +106,19 @@ nres = 6
 res_trait_1 = seq(0, (nres - 1) / nres, l = nres)
 res_trait_2 = seq(0, (nres - 1) / nres, l = nres)
 spec_trait_1 = seq(0, (nspec - 1) / nspec, l = nspec)
-#spec_trait_1 = sample(spec_trait_1, size = length(spec_trait_1), replace = F)
 spec_trait_2 = seq(0, (nspec - 1) / nspec, l = nspec)
 spec_trait_2 = sample(spec_trait_2, size = length(spec_trait_2), replace = F)
 dists_1 = circ_dist(spec_trait_1, res_trait_1)
-#dists_2 = 0
 dists_2 = circ_dist(spec_trait_2, res_trait_2)
-w_1 = .97
-w_2 = 0.03
-C = exp(- ((w_1 * dists_1^2) + (w_2 * dists_2^2)) / .015)
-#C = exp(-pmax((dists_1^2 / sigma_1), (dists_2^2 / sigma_2)))
+w_1 = .99
+w_2 = 1 - w_1
+C = exp(- ((w_1 * dists_1^2) + (w_2 * dists_2^2)) / .02)
 
 params = list(
   nspec = nspec,
   nres = nres,
   alpha = .05,
-  r = 500,
+  r = 5000,
   K = 1,
   m = .2,
   C = C
@@ -160,9 +157,9 @@ plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b', xlab = 'k', ylab = 'Gap', mai
 # I[(C > .6) & (C < .8)] = 3
 # I[(C > .8) & (C < 1)] = 4
 
-I = (C > .3) * 1
+I = (C > .5) * 1
 
-disc_gap = discrete_gap(dat = I, k_max = k_max, nboot = 50)
+disc_gap = discrete_gap(dat = I, eql_abuns = eql_abuns, k_max = k_max, nboot = 50)
 
 print(disc_gap)
 

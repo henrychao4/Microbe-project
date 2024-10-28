@@ -54,12 +54,12 @@ bootstrap_replicate = \(I = I, eql_abuns = eql_abuns, k_max){
   return(replicate_err)
 }
 
-discrete_gap = \(dat, k_max, nboot) {
+discrete_gap = \(dat, eql_abuns, k_max, nboot) {
   numCores = detectCores()
   cl = makeCluster(numCores)
   
   clusterExport(cl, varlist = c("bootstrap_replicate", "I", "eql_abuns", "best_wKModes", "wKModes"))
-  inputs = replicate(nboot, list(I = I, eql_abuns = eql_abuns, k_max = k_max), simplify = FALSE)
+  inputs = replicate(nboot, list(I = dat, eql_abuns = eql_abuns, k_max = k_max), simplify = FALSE)
   
   results = clusterApply(cl, inputs, function(input) {
     bootstrap_replicate(input$I, input$eql_abuns, input$k_max)
@@ -159,7 +159,7 @@ for (w in 1:length(w_2_vec)) {
   kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = k_max)
   
   I = (C > .3) * 1
-  disc_gap = discrete_gap(dat = I, k_max = k_max, nboot = 50)
+  disc_gap = discrete_gap(dat = I, eql_abuns = eql_abuns, k_max = k_max, nboot = 50)
   
   cont_p_val_vec[w] = kmg_gap$p.value
   cont_opt_k_vec[w] = kmg_gap$khat
