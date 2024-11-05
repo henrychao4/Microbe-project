@@ -105,7 +105,7 @@ nres = 6
 
 w_2_vec = seq(0, .1, by = .005)
 
-nreps = 10
+nreps = 5
 
 cont_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
 disc_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
@@ -114,7 +114,7 @@ cont_opt_k_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
 disc_opt_k_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
 
 for (w in 1:length(w_2_vec)) {
-  for (i in 1:10) {
+  for (i in 1:nreps) {
     res_trait_1 = seq(0, (nres - 1) / nres, l = nres)
     res_trait_2 = seq(0, (nres - 1) / nres, l = nres)
     spec_trait_1 = seq(0, (nspec - 1) / nspec, l = nspec)

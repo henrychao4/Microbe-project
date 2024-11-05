@@ -110,19 +110,21 @@ make_binned_I = \(C, nbins) {
 nspec = 240
 nres = 6
 
-w_2_vec = seq(0, .02, by = .002)
+w_2_vec = seq(0, .03, by = .005)
 
 nreps = 9
 
 cont_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
 disc_2_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
-disc_3_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
-disc_4_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
+# disc_3_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
+# disc_4_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
+disc_10_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
 
 cont_opt_k_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
 disc_2_opt_k_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
-disc_3_opt_k_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
-disc_4_opt_k_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
+# disc_3_opt_k_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
+# disc_4_opt_k_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
+disc_10_opt_k_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
 
 for (w in 1:length(w_2_vec)) {
   for (i in 1:nreps) {
@@ -168,37 +170,59 @@ for (w in 1:length(w_2_vec)) {
     
     kmg_data = as.data.frame(C)
     kmg_data$N = round(eql_abuns)
-    kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = k_max)
+    kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = k_max, numnulls = 500)
     
     I_2 = make_binned_I(C, 2)
-    I_3 = make_binned_I(C, 3)
-    I_4 = make_binned_I(C, 4)
+    # I_3 = make_binned_I(C, 3)
+    # I_4 = make_binned_I(C, 4)
+    I_10 = make_binned_I(C, 10)
     
-    disc_2_gap = discrete_gap(dat = I_2, eql_abuns = eql_abuns, k_max = k_max, nboot = 50)
-    disc_3_gap = discrete_gap(dat = I_3, eql_abuns = eql_abuns, k_max = k_max, nboot = 50)
-    disc_4_gap = discrete_gap(dat = I_4, eql_abuns = eql_abuns, k_max = k_max, nboot = 50)
+    disc_2_gap = discrete_gap(dat = I_2, eql_abuns = eql_abuns, k_max = k_max, nboot = 500)
+    # disc_3_gap = discrete_gap(dat = I_3, eql_abuns = eql_abuns, k_max = k_max, nboot = 500)
+    # disc_4_gap = discrete_gap(dat = I_4, eql_abuns = eql_abuns, k_max = k_max, nboot = 500)
+    disc_10_gap = discrete_gap(dat = I_10, eql_abuns = eql_abuns, k_max = k_max, nboot = 500)
     
     cont_p_val_mat[w,i] = kmg_gap$p.value
     disc_2_p_val_mat[w,i] = disc_2_gap$p_val
-    disc_3_p_val_mat[w,i] = disc_3_gap$p_val
-    disc_4_p_val_mat[w,i] = disc_4_gap$p_val
+    # disc_3_p_val_mat[w,i] = disc_3_gap$p_val
+    # disc_4_p_val_mat[w,i] = disc_4_gap$p_val
+    disc_10_p_val_mat[w,i] = disc_10_gap$p_val
     
     cont_opt_k_mat[w,i] = kmg_gap$khat
     disc_2_opt_k_mat[w,i] = disc_2_gap$opt_k
-    disc_3_opt_k_mat[w,i] = disc_3_gap$opt_k
-    disc_4_opt_k_mat[w,i] = disc_4_gap$opt_k
-    
+    # disc_3_opt_k_mat[w,i] = disc_3_gap$opt_k
+    # disc_4_opt_k_mat[w,i] = disc_4_gap$opt_k
+    disc_10_opt_k_mat[w,i] = disc_10_gap$opt_k
   }
+  print(w_2_vec[w])
 }
 
 cont_p_val_vec = apply(cont_p_val_mat, 1, median)
 disc_2_p_val_vec = apply(disc_2_p_val_mat, 1, median)
-disc_3_p_val_vec = apply(disc_3_p_val_mat, 1, median)
-disc_4_p_val_vec = apply(disc_4_p_val_mat, 1, median)
+# disc_3_p_val_vec = apply(disc_3_p_val_mat, 1, median)
+# disc_4_p_val_vec = apply(disc_4_p_val_mat, 1, median)
+disc_10_p_val_vec = apply(disc_10_p_val_mat, 1, median)
+
+cont_opt_k_vec = apply(cont_opt_k_mat, 1, median) + .1
+disc_2_opt_k_vec = apply(disc_2_opt_k_mat, 1, median)
+# disc_3_opt_k_vec = apply(disc_3_opt_k_mat, 1, median)
+# disc_4_opt_k_vec = apply(disc_4_opt_k_mat, 1, median)
+disc_10_opt_k_vec = apply(disc_10_opt_k_mat, 1, median)
 
 plot(w_2_vec, cont_p_val_vec, ylim = c(0,1), type = 'b', xlab = 'Noise from other trait axis', ylab = 'p-value for clustering', col = 'red')
 lines(w_2_vec, disc_2_p_val_vec, type = 'b', col = 'blue')
-lines(w_2_vec, disc_3_p_val_vec, type = 'b', col = 'green')
-lines(w_2_vec, disc_4_p_val_vec, type = 'b', col = 'purple')
+# lines(w_2_vec, disc_3_p_val_vec, type = 'b', col = 'green')
+# lines(w_2_vec, disc_4_p_val_vec, type = 'b', col = 'purple')
+lines(w_2_vec, disc_10_p_val_vec, type = 'b', col = 'orange')
 abline(h = .05)
-legend("topleft", legend = c("Continuous", "Discrete 2 bins", "Discrete 3 bins", "Discrete 4 bins"), col = c("red", "blue", "green", "purple"), lty = 1)
+legend("topleft", legend = c("Continuous", "Discrete 2 bins", "Discrete 3 bins", "Discrete 4 bins"), col = c("red", "blue", "orange"), lty = 1)
+
+plot(w_2_vec, cont_opt_k_vec, ylim = c(0,8), type = 'b', xlab = 'Noise from other trait axis', ylab = 'Optimal k-value found', col = 'red')
+lines(w_2_vec, disc_2_opt_k_vec, type = 'b', col = 'blue')
+# lines(w_2_vec, disc_3_opt_k_vec, type = 'b', col = 'green')
+# lines(w_2_vec, disc_4_opt_k_vec, type = 'b', col = 'purple')
+lines(w_2_vec, disc_10_opt_k_vec, type = 'b', col = 'orange')
+legend("bottomleft", legend = c("Continuous", "Discrete 2 bins", "Discrete 3 bins", "Discrete 4 bins"), col = c("red", "blue", "orange"), lty = 1)
+
+plot(cont_p_val_vec, disc_2_p_val_vec, xlim = c(0, .1), ylim = c(0, .1), xlab = "Continious p-val", ylab = "Discrete p-val")
+abline(a = 0, b = 1)
