@@ -15,7 +15,7 @@ theme_update(
   aspect.ratio = 1
 )
 
-set.seed(3)
+set.seed(1)
 
 MacArthur = 
   \(time, state, parms){
@@ -33,10 +33,10 @@ circ_dist = function(vec1, vec2) {
   return(y)
 }
 
-nspec = 50
-nres = 50
+nspec = 30
+nres = 30
 
-ntraits = 5
+ntraits = 2
 
 res_traits = matrix(runif(nres * ntraits, min = 0, max = 1), nrow = nres, ncol = ntraits)
 res_dists = as.matrix(dist(res_traits, upper = T, diag = T))
@@ -90,6 +90,6 @@ kmg_data = as.data.frame(C)
 kmg_data$N = round(eql_abuns)
 kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = 10)
 
-plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b', main = "wx = .5, wy = .5")
+plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b', main = paste0('Number of resource dimensions = ', as.character(ntraits)))
 
 print(kmg_gap)

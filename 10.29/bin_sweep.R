@@ -112,7 +112,7 @@ nres = 6
 
 w_2_vec = seq(0, .03, by = .005)
 
-nreps = 9
+nreps = 21
 
 cont_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
 disc_2_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
@@ -215,14 +215,14 @@ lines(w_2_vec, disc_2_p_val_vec, type = 'b', col = 'blue')
 # lines(w_2_vec, disc_4_p_val_vec, type = 'b', col = 'purple')
 lines(w_2_vec, disc_10_p_val_vec, type = 'b', col = 'orange')
 abline(h = .05)
-legend("topleft", legend = c("Continuous", "Discrete 2 bins", "Discrete 3 bins", "Discrete 4 bins"), col = c("red", "blue", "orange"), lty = 1)
+legend("topleft", legend = c("Continuous", "Discrete 2 bins", "Discrete 10 bins"), col = c("red", "blue", "orange"), lty = 1)
 
 plot(w_2_vec, cont_opt_k_vec, ylim = c(0,8), type = 'b', xlab = 'Noise from other trait axis', ylab = 'Optimal k-value found', col = 'red')
 lines(w_2_vec, disc_2_opt_k_vec, type = 'b', col = 'blue')
 # lines(w_2_vec, disc_3_opt_k_vec, type = 'b', col = 'green')
 # lines(w_2_vec, disc_4_opt_k_vec, type = 'b', col = 'purple')
 lines(w_2_vec, disc_10_opt_k_vec, type = 'b', col = 'orange')
-legend("bottomleft", legend = c("Continuous", "Discrete 2 bins", "Discrete 3 bins", "Discrete 4 bins"), col = c("red", "blue", "orange"), lty = 1)
+legend("bottomleft", legend = c("Continuous", "Discrete 2 bins", "Discrete 10 bins"), col = c("red", "blue", "orange"), lty = 1)
 
 plot(cont_p_val_vec, disc_2_p_val_vec, xlim = c(0, .1), ylim = c(0, .1), xlab = "Continious p-val", ylab = "Discrete p-val")
 abline(a = 0, b = 1)
