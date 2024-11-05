@@ -5,6 +5,7 @@ library(furrr)
 library(matlib)
 library(reshape2)
 library(lsa)
+library(ggplot2)
 source("KmeansGap.r")
 
 plan(multisession(workers = detectCores() - 2))
@@ -33,8 +34,8 @@ circ_dist = function(vec1, vec2) {
   return(y)
 }
 
-nspec = 30
-nres = 30
+nspec = 50
+nres = 50
 
 ntraits = 2
 
@@ -93,3 +94,15 @@ kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = 10)
 plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b', main = paste0('Number of resource dimensions = ', as.character(ntraits)))
 
 print(kmg_gap)
+
+data = data.frame(Trait1 = res_traits[,1],
+                   Trait2 = res_traits[,2],
+                   Abundance = eql_abuns)
+
+# Create the scatterplot
+ggplot(data, aes(x = Trait1, y = Trait2, color = Abundance)) +
+  geom_point(size = 3) +                   # Set point size
+  scale_color_gradient(low = "blue", high = "red") + # Gradient from blue (low) to red (high)
+  labs(x = "Trait 1", y = "Trait 2", color = "Abundance") +
+  ggtitle("Scatterplot of Resource Traits with Abundance-based Colors") +
+  theme_minimal()
