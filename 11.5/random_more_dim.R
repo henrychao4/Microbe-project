@@ -59,12 +59,13 @@ ndims = 3
 weights = rep(1 / ndims, ndims)
 makeC_list = makeC(nspec, nres, ndims, weights)
 C = makeC_list$C
+C = C
 
 params = list(
   nspec = nspec,
   nres = nres,
   alpha = 0.01,
-  r = 1000,
+  r = 3 * nspec,
   K = 1,
   m = .2,
   C = C
