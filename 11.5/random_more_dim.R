@@ -54,7 +54,7 @@ makeC = \(nspec, nres, ndims, weights) {
 
 nspec = 300
 nres = 5
-ndims = 3
+ndims = 2
 
 weights = rep(1 / ndims, ndims)
 makeC_list = makeC(nspec, nres, ndims, weights)

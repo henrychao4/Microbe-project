@@ -1,5 +1,5 @@
 n_vec = 1:4
-nreps = 10000
+nreps = 50000
 
 dists = matrix(0, nrow = length(n_vec), ncol = nreps)
 
@@ -16,7 +16,7 @@ for (i in 1:length(n_vec)) {
   }
 }
 
-hist(dists[1,])
-hist(dists[2,])
-hist(dists[3,])
-hist(dists[4,])
+hist(dists[1,], xlab = "Euclidean Distance Between 2 Points", main = 'Dimension = 1')
+hist(dists[2,], xlab = "Euclidean Distance Between 2 Points", main = 'Dimension = 2')
+hist(dists[3,], xlab = "Euclidean Distance Between 2 Points", main = 'Dimension = 3')
+hist(dists[4,], xlab = "Euclidean Distance Between 2 Points", main = 'Dimension = 4')

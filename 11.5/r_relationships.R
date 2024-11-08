@@ -34,14 +34,28 @@ circ_dist = function(vec1, vec2) {
   return(y)
 }
 
-nspec = 50
-nres = 50
+nspec = 10
+nres = 10
 
 ntraits = 2
 
 res_traits = matrix(runif(nres * ntraits, min = 0, max = 1), nrow = nres, ncol = ntraits)
-res_dists = as.matrix(dist(res_traits, upper = T, diag = T))
-res_sim = exp(- res_dists^2 / .2)
+res_dists = matrix(0, nrow = nres, ncol = nres)
+
+dists_list = list()
+for (k in 1:ntraits){
+  dists_list[[k]] = circ_dist(res_traits[,k], res_traits[,k])
+}
+euclid_circ_dist = matrix(0, nrow = nres, ncol = nres)
+for (i in 1:nres) {
+  for (j in 1:nres) {
+    for (k in 1:ntraits) {
+      euclid_circ_dist[i,j] = sqrt(sum(dists_list[[k]][i,j]^2))
+    }
+  }
+}
+
+res_sim = exp(- euclid_circ_dist^2 / .2)
 C = res_sim
 
 # res_traits = matrix(runif(nres * ntraits, min = 0, max = 1), nrow = ntraits, ncol = nres)
