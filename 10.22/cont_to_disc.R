@@ -4,6 +4,7 @@ library(parallel)
 library(furrr)
 library(matlib)
 library(reshape2)
+library(MEDseq)
 source("KmeansGap.r")
 
 plan(multisession(workers = detectCores() - 2))

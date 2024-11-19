@@ -112,7 +112,7 @@ nres = 6
 
 w_2_vec = seq(0, .03, by = .005)
 
-nreps = 21
+nreps = 1
 
 cont_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)
 disc_2_p_val_mat = matrix(0, nrow = length(w_2_vec), ncol = nreps)

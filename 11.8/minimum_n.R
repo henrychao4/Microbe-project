@@ -4,7 +4,7 @@ library(parallel)
 library(furrr)
 library(matlib)
 library(reshape2)
-source("KmeansGap.r")
+source("C:\\Users\\henry\\Downloads\\KmeansGap.r")
 
 plan(multisession(workers = detectCores() - 2))
 theme_set(theme_bw())
@@ -104,3 +104,8 @@ for (i in 1:length(ndim_vec)) {
     k_opts[i,j] = kmg_gap$khat
   }
 }
+
+plot(n_vec, p_vals[1,], type = 'b', ylim = c(0,1), xlab = "Number of Species", ylab = "p value", main = "Ndim = 1")
+plot(n_vec, p_vals[2,], type = 'b', ylim = c(0,1),  xlab = "Number of Species", ylab = "p value", main = "Ndim = 2")
+plot(n_vec, p_vals[3,], type = 'b', ylim = c(0,1), xlab = "Number of Species", ylab = "p value", main = "Ndim = 3")
+plot(n_vec, p_vals[4,], type = 'b', ylim = c(0,1), xlab = "Number of Species", ylab = "p value", main = "Ndim = 4")

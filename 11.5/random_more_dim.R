@@ -97,3 +97,12 @@ plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b',
      xlab = 'k', ylab = 'Gap', main = paste0('Number of dimensions = ', as.character(ndims)))
 
 print(kmg_gap)
+
+data = as.data.frame(makeC_list)
+
+ggplot(data, aes(x = spec_traits[1,], y = spec_traits[2,], color = Abundance)) +
+  geom_point(size = 3) +                   # Set point size
+  scale_color_gradient(low = "blue", high = "red") + # Gradient from blue (low) to red (high)
+  labs(x = "Trait 1", y = "Trait 2", color = "Abundance") +
+  ggtitle("Scatterplot of Resource Traits with Abundance-based Colors") +
+  theme_minimal()

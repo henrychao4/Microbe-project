@@ -4,7 +4,6 @@ library(parallel)
 library(furrr)
 library(matlib)
 library(reshape2)
-library(FamilyRank)
 source("KmeansGap.r")
 
 set.seed(1)
@@ -40,7 +39,7 @@ for (i in 1:np) {
 }
 
 cons_traits_mono = matrix(data = runif(nspec * nm), nrow = nspec, ncol = nm)
-cons_traits_mono = cons_traits_mono / rowSums(cons_traits_mono)
+#cons_traits_mono = cons_traits_mono / rowSums(cons_traits_mono)
 
 C = matrix(0, nrow = nspec, ncol = np)
 
@@ -53,7 +52,7 @@ C = C / p_length
 params = list(
   nspec = nspec,
   np = np,
-  alpha = .05,
+  alpha = 0,
   r = 500,
   K = 1,
   m = .2,
