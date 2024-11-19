@@ -4,6 +4,7 @@ library(parallel)
 library(furrr)
 library(matlib)
 library(reshape2)
+library(randomForest)
 source("KmeansGap.r")
 
 plan(multisession(workers = detectCores() - 2))
@@ -45,7 +46,7 @@ find_num_alpha = \(current_state, model, params) {
     pert_state = current_state
     pert_state[j] = pert_state[j] + dNj
     pert_abuns = pert_state[0:nspec]
-    fwd_pert_result = ode(y = pert_state, times = seq(0,dt, by = dt/100), parms = params, func = MacArthur)
+    fwd_pert_result = ode(y = pert_state, times = seq(0, dt, by = dt/100), parms = params, func = MacArthur)
     fwd_pert_state = as.numeric(tail(fwd_pert_result, n = 1)[-1])
     fwd_pert_abuns = fwd_pert_state[0:nspec]
     num_alpha[,j] = (fwd_pert_abuns - pert_abuns) / (dt * dNj * pert_abuns) - (fwd_abuns - current_abuns) / (dt * dNj * current_abuns)
@@ -53,7 +54,7 @@ find_num_alpha = \(current_state, model, params) {
   return(num_alpha)
 }
 
-nspec = 50
+nspec = 10
 nres = 5
 
 res_trait_1 = seq(0, (nres - 1) / nres, l = nres)
@@ -96,15 +97,42 @@ plot(spec_trait_1, eql_abuns, type = 'h', xlab = 'Species trait 1', ylab = 'Equi
 
 num_alpha = find_num_alpha(eql, MacArthur, params)
 
+analytical_alpha = matrix(0, nspec, nspec)
+for (i in 1:nspec) {
+  for (j in 1:nspec) {
+    analytical_alpha[i,j] = - C[i,] %*% C[j,] * params$K / params$r
+  }
+}
+
 trait_dists_1 = matrix(0, nrow = nspec, ncol = nspec)
 trait_dists_2 = matrix(0, nrow = nspec, ncol = nspec)
+C_dists = matrix(0, nrow = nspec, ncol = nspec)
+
 for (i in 1:nspec) {
   for (j in 1:nspec) {
       trait_dists_1[i,j] = circ_dist(spec_trait_1[i], spec_trait_1[j])
       trait_dists_2[i,j] = circ_dist(spec_trait_2[i], spec_trait_2[j])
+      
+      C_dists[i,j] = sqrt(sum((C[i,] - C[j,])^2))
     }
-  }
+}
 
 trait_dists = sqrt(w_1 * (trait_dists_1)^2 + w_2 * (trait_dists_2)^2)
 
 plot(trait_dists, num_alpha, xlab = "Species - Species Trait Distances", ylab = "Numerical Alpha", main = "2 Dimensional Trait Space MacArthur Model")
+
+plot(C_dists, num_alpha, ylim = c(-.001, 0), xlab = "C dists", ylab = "Numerical Alpha", main = "1 Dimensional Trait Space MacArthur Model")
+
+C_data = data.frame(C_dists = as.vector(C_dists), num_alpha = as.vector(num_alpha))
+
+plot(eql_abuns, diag(num_alpha), xlim = c(0, 10))
+
+plot(rowSums(C), rowSums(num_alpha))
+
+plot(rowSums(C), eql_abuns)
+
+plot(analytical_alpha, num_alpha, xlab = "Raw Analytical Alpha", ylab = "Raw Numerical Alpha")
+abline(a = 0, b = 1)
+
+plot(analytical_alpha / diag(analytical_alpha), num_alpha / diag(num_alpha), xlab = "Normalized Analytical Alpha", ylab = "Normalized Numerical Alpha")
+abline(a = 0, b = 1)
