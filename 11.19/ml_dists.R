@@ -119,7 +119,7 @@ for (i in 1:nspec) {
 
 trait_dists = sqrt(w_1 * (trait_dists_1)^2 + w_2 * (trait_dists_2)^2)
 
-plot(trait_dists, num_alpha, xlab = "Higher level trait distance", ylab = "Numerical Alpha", main = "2 Dimensional Trait Space MacArthur Model")
+plot(trait_dists, num_alpha, ylim = c(-.001, 0), xlab = "Higher level trait distance", ylab = "Numerical Alpha", main = "2 Dimensional Trait Space MacArthur Model")
 
 plot(C_dists, num_alpha, ylim = c(-.001, 0), xlab = "Lower level trait distance", ylab = "Numerical Alpha", main = "2 Dimensional Trait Space MacArthur Model")
 

@@ -54,14 +54,13 @@ find_num_alpha = \(current_state, model, params) {
   return(num_alpha)
 }
 
-nspec = 20
-nres = 20
+nspec = 10
+nres = 5
 
 res_trait_1 = seq(0, (nres - 1) / nres, l = nres)
 res_trait_2 = seq(0, (nres - 1) / nres, l = nres)
 
-spec_trait_1 = seq(0, (nspec - 1) / nspec, l = nspec)
-# spec_trait_1 = runif(nspec, min = 0, max = 1)
+spec_trait_1 = runif(nspec, min = 0, max = 1)
 spec_trait_2 = runif(nspec, min = 0, max = 1)
 dists_1 = circ_dist(spec_trait_1, res_trait_1)
 dists_2 = circ_dist(spec_trait_2, res_trait_2)
@@ -111,11 +110,11 @@ C_dists = matrix(0, nrow = nspec, ncol = nspec)
 
 for (i in 1:nspec) {
   for (j in 1:nspec) {
-      trait_dists_1[i,j] = circ_dist(spec_trait_1[i], spec_trait_1[j])
-      trait_dists_2[i,j] = circ_dist(spec_trait_2[i], spec_trait_2[j])
-      
-      C_dists[i,j] = sqrt(sum((C[i,] - C[j,])^2))
-    }
+    trait_dists_1[i,j] = circ_dist(spec_trait_1[i], spec_trait_1[j])
+    trait_dists_2[i,j] = circ_dist(spec_trait_2[i], spec_trait_2[j])
+    
+    C_dists[i,j] = sqrt(sum((C[i,] - C[j,])^2))
+  }
 }
 
 trait_dists = sqrt(w_1 * (trait_dists_1)^2 + w_2 * (trait_dists_2)^2)
@@ -132,7 +131,7 @@ plot(rowSums(C), rowSums(num_alpha))
 
 plot(rowSums(C), eql_abuns)
 
-plot(analytical_alpha, num_alpha, xlab = "Analytical Alpha", ylab = "Numerical Alpha", main = paste0('r = ', as.character(params$r)))
+plot(analytical_alpha, num_alpha, xlab = "Raw Analytical Alpha", ylab = "Raw Numerical Alpha", main = paste0('r = ', as.character(params$r)))
 abline(a = 0, b = 1)
 
 plot(analytical_alpha / diag(analytical_alpha), num_alpha / diag(num_alpha), xlab = "Normalized Analytical Alpha", ylab = "Normalized Numerical Alpha")

@@ -33,7 +33,7 @@ circ_dist = function(vec1, vec2) {
   return(y)
 }
 
-nspec = 120
+nspec = 240
 nres = 8
 
 res_trait = seq(0, (nres - 1) / nres, l = nres)
@@ -145,3 +145,6 @@ null_opt_k_dist = null_max_gaps[null_k_opts == opt_k]
 null_max_gap_opt_k_q95 = quantile(null_opt_k_dist, .95)
 
 print(paste0('True max gap for equilibrium abundances: ', as.character(max(gap)), '. 95th percentile under the null for k = ', as.character(opt_k), ': ', as.character(null_max_gap_opt_k_q95)))
+
+z_score = (max(gap) - mean(null_max_gaps)) / sd(null_max_gaps)
+p_val = 1 - pnorm(z_score)

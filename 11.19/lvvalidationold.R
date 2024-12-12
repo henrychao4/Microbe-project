@@ -44,5 +44,5 @@ for (j in 1:n) {
   num_alpha[,j] = (next_pert_abuns - pert_abuns) / (dt * dNj * pert_abuns) - (next_abuns - current_abuns) / (dt * dNj * current_abuns)
 }
 
-plot(alpha, num_alpha)
+plot(alpha, num_alpha, xlab = expression(paste("True ", alpha, "s from LV Model")), ylab = expression(paste("Numerical ", alpha, "s")))
 abline(a = 0, b = 1)
