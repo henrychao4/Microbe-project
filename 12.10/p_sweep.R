@@ -17,15 +17,6 @@ theme_update(
 
 set.seed(1)
 
-# MacArthur =
-#   \(time, state, parms){
-#     N = state[1:params$nspec]
-#     R = state[(params$nspec + 1):(params$nspec + params$nres)]
-#     dNdt = with(parms, alpha + N * ((C %*% R) - m))
-#     dRdt = with(parms, R * (r * (1 - R / K) - t(C) %*% N))
-#     return(list(c(dNdt, dRdt)))
-#   }
-
 cross_feed = \(p, uptake) {
   tot = matrix(0, nrow = nrow(uptake), ncol = ncol(uptake))
   for (i in 1:nrow(uptake)) {
@@ -82,54 +73,51 @@ res_trait = seq(0, (nres - 1) / nres, l = nres)
 
 spec_trait = seq(0, (nspec - 1) / nspec, l = nspec)
 dists = circ_dist(spec_trait, res_trait)
-#C = exp(- (dists^2) / .5)
 
-C = matrix(c(1, 0, .4, 1), nrow = 2, ncol = 2)
-
-# p_vals = c(0, .3)
-# p = array(sample(p_vals, size = nspec * nres^2, replace = T), dim=c(nspec, nres, nres))
-# 
-# for (i in 1:nspec) {
-#   for (j in 1:nres) {
-#     for (k in 1:nres) {
-#       if (j == k) {
-#         p[i,j,k] = 0
-#       }
-#     }
-#   }
-# }
+C = matrix(c(1, 0, .9, 1), nrow = 2, ncol = 2)
 
 p = array(rep(0, nspec * nres^2), dim = c(nspec, nres, nres))
-p[1,1,2] = .3
-p[2,2,1] = 0
 
-r = c(10, 0)
+p_vec = seq(.51, .52, by = .001)
+alpha_vec = rep(0, length(p_vec))
 
-params = list(
-  nspec = nspec,
-  nres = nres,
-  alpha = 0,
-  r = r,
-  K = 1,
-  m = .2,
-  C = C,
-  p = p
-)
+for (i in 1:length(p_vec)) {
+  
+  p[1,1,2] = p_vec[i]
+  
+  r = c(10, 10)
+  
+  params = list(
+    nspec = nspec,
+    nres = nres,
+    alpha = 0,
+    r = r,
+    K = 1,
+    m = .2,
+    C = C,
+    p = p
+  )
+  
+  init_abuns = rep(5, params$nspec)
+  init_res = rep(5, params$nres)
+  init_state = c(init_abuns, init_res)
+  
+  sim = ode(y = init_state, times = seq(0, 5000), func = MacArthur, parms = params)
+  sim.df = as.data.frame(sim)
+  spec.abuns = sim.df[-((nspec+2):(nspec + nres + 2))]
+  abuns.df = melt(spec.abuns, id.vars='time')
+  eql = tail(sim, 1)[-1]
+  eql_abuns = eql[0:nspec]
+  num_coexist = length(eql_abuns[eql_abuns > .1])
+  
+  num_alpha = find_num_alpha(eql, MacArthur, params)
+  
+  alpha_vec[i] = num_alpha[2,1]
+}
 
-init_abuns = rep(5, params$nspec)
-init_res = rep(5, params$nres)
-init_state = c(init_abuns, init_res)
+plot(p_vec, alpha_vec, xlab = 'p_{112}', ylab = 'a_{12}', main = 'k = .4')
+abline(a = 0, b = 0)
 
-sim = ode(y = init_state, times = seq(0, 50000), func = MacArthur, parms = params)
-sim.df = as.data.frame(sim)
-spec.abuns = sim.df[-((nspec+2):(nspec + nres + 2))]
-abuns.df = melt(spec.abuns, id.vars='time')
-eql = tail(sim, 1)[-1]
-eql_abuns = eql[0:nspec]
-num_coexist = length(eql_abuns[eql_abuns > .1])
-
-plot(spec_trait, eql_abuns, type = 'h', xlab = 'Species trait 1', ylab = 'Equilibrium Abundance')
-
-num_alpha = find_num_alpha(eql, MacArthur, params)
-
-hist(num_alpha)
+x_vec = seq(.1, .9, by = .1)
+y_vec = c(.116, .205, .274, .31, .378, .419, .454, .485, .513)
+plot(x_vec, y_vec, type = 'b', xlab = 'c_{12}', ylab = 'p_{112}', main = 'Parameter Combinations for alpha_{12} = 0')
