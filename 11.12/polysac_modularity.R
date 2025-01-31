@@ -33,7 +33,6 @@ nm = 3
 np = 10
 p_length = 10
 
-monos = 1:nm
 polys = matrix(0, nrow = np, ncol = nm)
 
 for (i in 1:np) {
@@ -41,7 +40,7 @@ for (i in 1:np) {
 }
 
 adj = vegdist(polys, method = "bray", diag = T, upper = T)
-modularity(adj)
+#modularity(adj)
 
 
 cons_traits_mono = matrix(data = runif(nspec * nm), nrow = nspec, ncol = nm)

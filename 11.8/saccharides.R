@@ -26,12 +26,11 @@ MacArthur =
     return(list(c(dNdt, dRdt)))
   }
 
-nspec = 100
+nspec = 50
 nm = 3
 np = 10
 p_length = 10
 
-monos = 1:nm
 polys = matrix(0, nrow = np, ncol = nm)
 
 for (i in 1:np) {
@@ -39,7 +38,7 @@ for (i in 1:np) {
 }
 
 cons_traits_mono = matrix(data = runif(nspec * nm), nrow = nspec, ncol = nm)
-#cons_traits_mono = cons_traits_mono / rowSums(cons_traits_mono)
+cons_traits_mono = cons_traits_mono / rowSums(cons_traits_mono)
 
 C = matrix(0, nrow = nspec, ncol = np)
 
@@ -73,10 +72,18 @@ num_coexist = length(eql_abuns[eql_abuns > .1])
 
 p = ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic() + ggtitle('MacArthur')
 
-kmg_data = as.data.frame(C)
-kmg_data$N = round(eql_abuns)
-kmg_gap = KmeansGap(dat = kmg_data, multiD = T, mink = 1, maxk = 5)
+hl_data = as.data.frame(C)
+hl_data$N = round(eql_abuns)
+hl_gap = KmeansGap(dat = hl_data, multiD = T, mink = 1, maxk = 5)
 
-plot(kmg_gap$data$k, kmg_gap$data$gap, type = 'b')
+plot(hl_gap$data$k, hl_gap$data$gap, type = 'b')
 
-print(kmg_gap)
+print(hl_gap)
+
+ll_trait_data = as.data.frame(cons_traits_mono)
+ll_trait_data$N = round(eql_abuns)
+ll_gap = KmeansGap(dat = ll_trait_data, multiD = T, mink = 1, maxk = 5)
+
+plot(ll_gap$data$k, ll_gap$data$gap, type = 'b')
+
+print(ll_gap)
