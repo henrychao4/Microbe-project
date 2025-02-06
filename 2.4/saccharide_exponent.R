@@ -77,18 +77,18 @@ p = ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_c
 
 hl_trait_data = as.data.frame(C)
 hl_trait_data$N = round(eql_abuns)
-hl_gap = KmeansGap(dat = hl_trait_data, multiD = T, mink = 1, maxk = 10, numnulls = 100)
+hl_gap = KmeansGap(dat = hl_trait_data, multiD = T, mink = 1, maxk = 5, numnulls = 100)
 
-plot(hl_gap$data$k, hl_gap$data$gap, type = 'b')
+plot(hl_gap$data$k, hl_gap$data$gap, type = 'b', xlab = 'k', ylab = 'Gap', main = 'Clustering Using Affinities for Polys')
 
 print(hl_gap)
 
 ll_trait_data = as.data.frame(cons_traits_mono)
 ll_trait_data$N = round(eql_abuns)
-ll_gap = KmeansGap(dat = ll_trait_data, multiD = T, mink = 1, maxk = 10, numnulls = 100)
+ll_gap = KmeansGap(dat = ll_trait_data, multiD = T, mink = 1, maxk = 5, numnulls = 100)
 
-plot(ll_trait_data$V1, ll_trait_data$N, type = 'h')
+plot(ll_trait_data$V1, ll_trait_data$N, type = 'h', xlab = 'Affinitiy for Mono 1', ylab = 'Abundance')
 
-plot(ll_gap$data$k, ll_gap$data$gap, type = 'b')
+plot(ll_gap$data$k, ll_gap$data$gap, type = 'b', xlab = 'k', ylab = 'Gap', main = 'Clustering Using Affinities for Monos')
 
 print(ll_gap)
