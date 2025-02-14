@@ -4,10 +4,11 @@ library(parallel)
 library(furrr)
 library(matlib)
 library(reshape2)
-library(cluster)
+library(scatterplot3d)
+library(Matrix)
 source("KmeansGap.r")
 
-set.seed(1)
+set.seed(3)
 
 create_poly = \(p_length, nm) {
   vec = sample(nm, p_length, replace = T)
@@ -27,10 +28,10 @@ MacArthur =
     return(list(c(dNdt, dRdt)))
   }
 
-nspec = 50
-nm = 3
-np = 5
-p_length = 20
+nspec = 3
+nm = 2
+np = 3
+p_length = 10
 
 polys = matrix(0, nrow = np, ncol = nm)
 
@@ -41,11 +42,14 @@ for (i in 1:np) {
 cons_traits_mono = matrix(data = runif(nspec * nm), nrow = nspec, ncol = nm)
 cons_traits_mono = cons_traits_mono / rowSums(cons_traits_mono)
 
+scatterplot3d(cons_traits_mono, pch = 16, color = "blue", main = "3D Scatter Plot",
+              xlab = "Affinity for Mono 1", ylab = "Affinity for Mono 2", zlab = "Affinity for Mono 3")
+
 C = matrix(0, nrow = nspec, ncol = np)
 
 for (i in 1:nspec) {
-  #C[i,] = rowSums(t(t(polys) * cons_traits_mono[i,]))
-  C[i,] = rowSums(t(t(polys) * cons_traits_mono[i,]^1.5))
+  C[i,] = rowSums(t(t(polys) * cons_traits_mono[i,]))
+  #C[i,] = rowSums(t(t(polys) * cons_traits_mono[i,]^1.5))
 }
 
 C = C / (p_length)
@@ -53,8 +57,8 @@ C = C / (p_length)
 params = list(
   nspec = nspec,
   np = np,
-  alpha = 0.1,
-  r = 50,
+  alpha = 0,
+  r = 500,
   K = 1,
   m = .2,
   C = C
@@ -76,28 +80,4 @@ plot(cons_traits_mono[,1], eql_abuns, type = 'h')
 
 p = ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic() + ggtitle('MacArthur')
 
-hl_trait_data = as.data.frame(C)
-hl_trait_data$N = round(eql_abuns)
-hl_gap = KmeansGap(dat = hl_trait_data, multiD = T, mink = 1, maxk = 5, numnulls = 100)
-
-plot(hl_gap$data$k, hl_gap$data$gap, type = 'b', xlab = 'k', ylab = 'Gap', main = 'Clustering Using Affinities for Polys')
-
-print(hl_gap)
-
-ll_trait_data = as.data.frame(cons_traits_mono)
-ll_trait_data$N = round(eql_abuns)
-ll_gap = KmeansGap(dat = ll_trait_data, multiD = T, mink = 1, maxk = 5, numnulls = 100)
-
-plot(ll_trait_data$V1, ll_trait_data$N, type = 'h', xlab = 'Affinitiy for Mono 1', ylab = 'Abundance')
-
-plot(ll_gap$data$k, ll_gap$data$gap, type = 'b', xlab = 'k', ylab = 'Gap', main = 'Clustering Using Affinities for Monos')
-
-print(ll_gap)
-
-
-kmax = 10
-clusgap = clusGap(hl_trait_data, FUNcluster = kmeans, K.max = kmax, B = 100)
-
-plot(1:kmax, clusgap$Tab[,3], type = 'b', xlab = 'k', ylab = 'Tibs Gap')
-
-plot_clusgap(clusgap, title = "Gap Statistic results")
+print(rankMatrix(C))
