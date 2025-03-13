@@ -79,6 +79,8 @@ plot(cons_traits_mono[,1], eql_abuns, type = 'h')
 
 p = ggplot(abuns.df, aes(time, value, color = variable)) + geom_line() + theme_classic() + ggtitle('MacArthur')
 
+print(p)
+
 mono_prop = colSums(polys)
 plot(cons_traits_mono[,3], eql_abuns, type = 'h')
 
